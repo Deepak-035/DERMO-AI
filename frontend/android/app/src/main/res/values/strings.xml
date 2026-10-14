@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Skin Lesion Detection</string>
+    <string name="title_activity_main">Skin Lesion Detection</string>
+    <string name="package_name">com.example.skinlesiondetectionapp</string>
+    <string name="custom_url_scheme">com.example.skinlesiondetectionapp</string>
+</resources>

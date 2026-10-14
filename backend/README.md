@@ -83,3 +83,31 @@ The repository includes the trained model weights for:
 These models can be directly loaded for inference or deployment without retraining.
 
 ---
+The final project status is present in "Major_Project_2"
+
+🚧 Current Project Status
+Completed
+Skin disease classification project architecture
+Dataset preparation
+Hybrid CNN–Transformer model development
+Stage 2 disease classification model
+Stage 1 skin/non-skin classifier
+Stage 1 MobileNetV2 training
+Stage 1 evaluation
+FastAPI backend
+Image upload API
+Image validation
+Two-stage prediction pipeline
+Pydantic prediction response schema
+Supabase integration
+Image storage
+Prediction storage
+React + Vite frontend
+Frontend-backend API communication
+Docker containerization
+Google Artifact Registry setup
+Google Cloud Run deployment
+Google Secret Manager integration
+Vercel frontend deployment
+Local FastAPI testing
+Production API deployment

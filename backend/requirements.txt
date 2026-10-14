@@ -1,27 +1,38 @@
-#FastAPI Backend
-fastapi>=0.115.0
-uvicorn>=0.30.0
-python-multipart>=0.0.9
+# Python Version
+# Python 3.11+ Recommended
 
-#Database
-supabase>=2.4.0
+# FastAPI Backend
+fastapi==0.116.1
+uvicorn==0.35.0
+python-multipart==0.0.20
 
-#Environment Variables
-python-dotenv>=1.0.0
+# Database
+psycopg2-binary==2.9.10
 
-#Machine Learning
-torch>=2.0.0
-torchvision>=0.15.0
+# Supabase
+supabase==2.18.1
+postgrest==1.1.1
+realtime==2.7.0
+storage3==0.12.1
+supafunc==0.10.1
 
-#Image Processing
-Pillow>=10.0.0
+# Environment Variables
+python-dotenv==1.1.1
 
-#Data Processing
-numpy>=1.20.0
-pandas>=2.0.0
+# Machine Learning
+torch==2.9.0
+torchvision==0.24.0
 
-#Validation
-pydantic>=2.0.0
+# Image Processing
+Pillow==11.3.0
+opencv-python-headless==4.12.0.88
 
-#Utilities
-tqdm>=4.60.0
+# Data Processing
+numpy==2.2.6
+pandas==2.3.2
+
+# Validation
+pydantic==2.11.7
+
+# Utilities
+tqdm==4.67.1

@@ -12,7 +12,13 @@ export default function Predict() {
   const [preview, setPreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ label: string; confidence: number; code: string; imageUrl: string } | null>(null);
+  const [result, setResult] = useState<{
+      label:string;
+      confidence:number;
+      code:string;
+      imageUrl:string;
+      warnings:string[];
+  } | null>(null);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -47,10 +53,11 @@ export default function Predict() {
       const response = await predictImage(file);
       if (response.success && response.result) {
         setResult({
-          label: response.result.prediction,
-          confidence: response.result.confidence,
-          code: response.result.code,
-          imageUrl: getImageUrl(response.result.image_url) || preview!,
+            label: response.result.prediction,
+            confidence: response.result.confidence,
+            code: response.result.code,
+            imageUrl: getImageUrl(response.result.image_url),
+            warnings: response.warnings || []
         });
       } else {
         throw new Error(response.message || 'Prediction failed');
@@ -141,6 +148,18 @@ export default function Predict() {
                   </div>
                   <Progress value={result.confidence} className="h-2 bg-slate-800" />
                 </div>
+                {result.warnings.length>0 && (
+                    <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
+                        <h4 className="mb-2 text-sm font-semibold text-yellow-300">
+                            ⚠ Warnings
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-200">
+                            {result.warnings.map((warning,index) => (
+                                <li key={index}>{warning}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
                 
                 <div className="pt-4">
                   <button 

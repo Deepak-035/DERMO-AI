@@ -1,15 +1,14 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv(override=True)
+load_dotenv()
 
 #Supabase
 SUPABASE_URL=os.getenv("SUPABASE_URL")
 SUPABASE_KEY=os.getenv("SUPABASE_KEY")
 
 #Storage
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
+UPLOAD_FOLDER="uploads"
 BUCKET_NAME="skin-images"
 
 #File Validation
@@ -18,12 +17,13 @@ ALLOWED_IMAGE_TYPES={
     "image/jpeg",
     "image/jpg",
     "image/png",
+    "image/webp"
 }
 
 #Model
-MODEL_PATH = os.path.join(BASE_DIR, "trained_models", "hybrid_best.pth")
+MODEL_PATH="trained_models/hybrid_best.pth"
 
 #API
 API_TITLE="Skin Disease Classification API"
 API_VERSION="1.0.0"
-API_DESCRIPTION="Backend API for Skin Disease Classification using a Hybrid CNN-Transformer model."
+API_DESCRIPTION=("Backend API for Skin Disease Classification using a Hybrid CNN-Transformer model.""<br>""<b><h4>⚠️DISCLAIMER: This model is intended only for dermoscopic or skin lesion images. Uploading unrelated images may produce invalid predictions.⚠️</b></h4>")
