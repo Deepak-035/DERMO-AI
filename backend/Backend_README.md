@@ -1,100 +1,101 @@
 # Skin Disease Classification API
-A FastAPI backend for skin disease classification using a Hybrid CNN–Transformer deep learning model. The API predicts the type of skin lesion from an uploaded image, stores prediction history in Supabase and uploads images to Supabase Storage.
+A FastAPI backend for skin disease classification using a Hybrid CNN-Transformer model.
+The API accepts a skin lesion image, validates the image quality, predicts the disease class, uploads the image to Supabase Storage and stores prediction history in Supabase Database.
 ---
 ## Features
-- Skin disease prediction using a Hybrid CNN–Transformer model
-- Image upload and validation
-- Prediction confidence score
-- Prediction history management
-- Supabase PostgreSQL integration
+- Skin disease classification
+- Hybrid CNN + Transformer model
+- FastAPI REST API
 - Supabase Storage integration
-- Global exception handling
-- Logging
-- Interactive Swagger UI documentation
+- Supabase Database integration
+- Image upload
+- Prediction history
+- Confidence score
+- Image quality validation
+---
+## Validation Pipeline
+### Image Validation
+- File extension validation
+- Image verification
+- Corrupted image detection
+
+### Quality Checks
+- Resolution check
+- Brightness check
+- Blur detection
+
+### Prediction
+- Confidence threshold
 ---
 ## Tech Stack
+Backend
 - FastAPI
 - Python
+
+Machine Learning
 - PyTorch
-- OpenCV
+- TorchVision
+
+Image Processing
 - Pillow
-- Supabase
-- Uvicorn
+- OpenCV
+
+Database
+- Supabase PostgreSQL
+
+Storage
+- Supabase Storage
+
+Validation
+- Pydantic
 ---
 ## Project Structure
 ```
 backend/
 │
 ├── api/
-│   ├── ml/
 │   ├── routers/
-│   ├── schemas/
 │   ├── services/
-│   ├── config.py
-│   ├── exceptions.py
-│   ├── logger.py
+│   ├── ml/
+│   ├── schemas/
 │   ├── main.py
+│   ├── config.py
+│   ├── logger.py
 │   └── supabase_client.py
 │
-├── trained_models/
-│   └── hybrid_best.pth
-│
-├── uploads/
-├── logs/
-├── .env
 ├── requirements.txt
+├── .gitignore
 └── README.md
 ```
 ---
-## API Endpoints
-### General
-| Method | Endpoint  | Description  |
-|--------|-----------|--------------|
-| GET    | `/`       | Home         |
-| GET    | `/health` | Health Check |
-
-### Prediction
-| Method | Endpoint   | Description          |
-|--------|------------|----------------------|
-| POST   | `/predict` | Predict skin disease |
-
-### History
-| Method | Endpoint        | Description            |
-|--------|-----------------|------------------------|
-| GET    | `/history`      | Get prediction history |
-| GET    | `/history/{id}` | Get prediction by ID   |
-| DELETE | `/history/{id}` | Delete prediction      |
-
----
 ## Installation
-Clone the repository.
-
+Clone the repository
 ```bash
 git clone <repository-url>
 ```
-Navigate into the project.
 
+Move into the project
 ```bash
 cd backend
 ```
 
-Create a virtual environment.
+Create virtual environment
 ```bash
 python -m venv venv
 ```
 
-Activate it.
+Activate virtual environment
 Windows
 ```bash
 venv\Scripts\activate
 ```
 
-Linux / macOS
+Linux/macOS
 ```bash
 source venv/bin/activate
 ```
 
-Install dependencies.
+Install dependencies
 ```bash
 pip install -r requirements.txt
 ```
@@ -102,41 +103,64 @@ pip install -r requirements.txt
 ---
 ## Environment Variables
 Create a `.env` file.
-```
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
+
+```env
+SUPABASE_URL=YOUR_SUPABASE_URL
+SUPABASE_KEY=YOUR_SUPABASE_ANON_KEY
 ```
 ---
-## Running the Server
+## Run the API
 ```bash
 uvicorn api.main:app --reload
 ```
+
 Server
 ```
 http://127.0.0.1:8000
 ```
+
 Swagger Documentation
 ```
 http://127.0.0.1:8000/docs
 ```
-ReDoc Documentation
+
+ReDoc
 ```
 http://127.0.0.1:8000/redoc
 ```
+
+---
+## API Endpoints
+### Predict
+```
+POST /predict
+```
+
+Upload an image and receive:
+- Predicted disease
+- Confidence score
+- Warnings (if any)
+- Image URL
+
+---
+### Prediction History
+```
+GET /history
+```
+
+Returns previously stored predictions.
 ---
 ## Model
-The backend uses a Hybrid CNN–Transformer model trained for multiclass skin disease classification.
-Predicted classes include:
-- Melanocytic Nevus
-- Melanoma
-- Basal Cell Carcinoma
-- Benign Keratosis
-- Actinic Keratoses
-- Vascular Lesion
-- Dermatofibroma
+The backend uses a Hybrid CNN-Transformer model implemented in PyTorch for multi-class skin disease classification.
 ---
-## Pending Work
+
+## Remaining Work
 - Frontend integration
-- User authentication
-- Model performance improvements - If time permits
+- Authentication
 ---
+
+## Supabase PostgreSQL Code
+The Code is present in "Database_Table_Code.sql" file.Paste in the Supabase SQL Editor and Run it.
+
+## Supabase Storage Bucket
+The Supabase Storage Bucket named "skin-images" needs to be created manually for storing the uploaded images. 

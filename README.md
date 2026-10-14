@@ -1,74 +1,157 @@
-# DermoAI - Automated Skin Disease Classification System
+# Skin Disease Classification using a Hybrid CNN–Transformer Model
 
-A next-generation automated skin disease classification web application powered by a **Hybrid CNN-Transformer** deep learning model (PyTorch), **FastAPI** backend, and a modern **React + Vite + TypeScript** glassmorphic frontend.
+This repository contains the implementation of a **Skin Disease Classification** system using deep learning. The project explores the performance of a baseline **EfficientNet-B0 CNN** model and a proposed **Hybrid CNN–Transformer** architecture.
+
+## Repository Structure
+
+```
+main
+├── MP_1
+├── MP_2
+│   └── Trained_Model
+└── MP_2_H
+    └── Hybrid_Model
+```
+
+## Branch Details
+
+### `main`
+- Contains the initial project files and earlier implementation.
+- Retained for reference purposes only.
+- No use of it.
+
+### `MP_1`
+- EfficientNet-B0 (CNN) with **Frozen Feature Extraction**.
+- Only the classifier layers were trained.
+- **Test Accuracy:** **63%**
+
+### `MP_2`
+- EfficientNet-B0 (CNN) with **Full Fine-Tuning** (all layers unfrozen).
+- Represents the improved CNN baseline.
+- **Test Accuracy:** **73%**
+
+### `MP_2_H`
+- Proposed **Hybrid CNN–Transformer** architecture.
+- Combines EfficientNet-B0 (the same `MP_2` code)for local feature extraction with a Transformer Encoder (code) for global feature learning.
+- **Test Accuracy:** **79%**
+
+### `Trained_Model`
+- Contains the trained weights (`.pth`) for the EfficientNet-B0 `MP_2` model.
+- **Model Accuracy:** **73%**
+
+### `Hybrid_Model`
+- Contains the trained weights (`.pth`) for the Hybrid CNN–Transformer `MP_2_H` model.
+- **Model Accuracy:** **79**
 
 ---
 
-## 🚀 Key Features
+## Model Performance
 
-- **Hybrid CNN-Transformer AI Model**: Combines spatial feature extraction (CNN) with global attention mechanisms (Transformer) to accurately classify skin lesions into 7 diagnostic categories:
-  - Melanocytic Nevus (`nv`)
-  - Melanoma (`mel`)
-  - Benign Keratosis (`bkl`)
-  - Basal Cell Carcinoma (`bcc`)
-  - Actinic Keratoses (`akiec`)
-  - Vascular Lesion (`vasc`)
-  - Dermatofibroma (`df`)
-- **Real-Time Screening Interface**: Drag-and-drop skin image upload with instant client preview, live progress indicator, confidence score bar, and disease class code badges.
-- **Prediction History Management**: Automated storing of screening reports in Supabase Cloud or local fallback storage with delete capabilities.
-- **Live Health Monitoring**: Real-time connection status check between React frontend and FastAPI backend.
+| Model  |                Architecture                 | Test Accuracy |
+|--------|---------------------------------------------|--------------:|
+| MP_1   | EfficientNet-B0 (Frozen Feature Extraction) | 63%           |
+| MP_2   | EfficientNet-B0 (Full Fine-Tuning)          | 73%           |
+| MP_2_H | Hybrid CNN–Transformer                      | **79%**       |
 
 ---
 
-## 📂 Repository Structure
+## Project Highlights
 
-```
-dermoAI/
-├── backend/                  # FastAPI Python backend & PyTorch inference model
-│   ├── api/                  # Routers, schemas, services, and Supabase client
-│   ├── trained_models/       # Trained hybrid model weights (hybrid_best.pth)
-│   ├── uploads/              # Local storage folder for uploaded lesion images
-│   ├── requirements.txt      # Python dependencies
-│   └── Backend_README.md     # Detailed backend documentation
-│
-└── frontend/                 # React 18 + Vite + TypeScript + Tailwind CSS frontend
-    ├── src/
-    │   ├── services/api.ts   # Centralized API service layer connecting to FastAPI
-    │   ├── pages/            # Login, Dashboard, Predict, and History pages
-    │   └── components/       # Glassmorphism cards, buttons, nav, background video
-    ├── .env                  # VITE_API_URL configuration
-    └── README.md             # Detailed step-by-step frontend & API integration guide
-```
+- Skin Disease Classification using the HAM10000 dataset
+- Transfer Learning with EfficientNet-B0
+- Full Fine-Tuning for improved performance
+- Hybrid CNN–Transformer architecture
+- Class-weighted Cross Entropy Loss
+- AdamW Optimizer
+- Learning Rate Scheduling
+- Comprehensive model evaluation using:
+  - Classification Report
+  - Confusion Matrix
+  - ROC Curve
+  - Precision–Recall Curve
+  - Misclassified Image Analysis
 
 ---
 
-## 📖 Detailed Guides
+## Trained Models
 
-- [Frontend & Frontend-Backend Integration Step-by-Step Guide](file:///c:/Users/Deepak/Documents/dermoAI/frontend/README.md)
-- [Backend Architecture & API Documentation](file:///c:/Users/Deepak/Documents/dermoAI/backend/Backend_README.md)
+The repository includes the trained model weights for:
+
+- EfficientNet-B0 (Full Fine-Tuning)
+- Hybrid CNN–Transformer
+
+These models can be directly loaded for inference or deployment without retraining.
+
+--
+
+The project also includes a **Stage 1 Skin/Non-Skin Image Classifier** that acts as an input validation layer before the main disease classification model.
 
 ---
 
-## ⚡ Quick Start
+## 📌 Project Overview
 
-### 1. Start Backend Server
-```bash
-cd backend
-# Install dependencies
-pip install -r requirements.txt
+Skin diseases can exhibit visually similar characteristics, making accurate classification challenging.
 
-# Launch FastAPI backend on http://localhost:8000
-uvicorn api.main:app --reload --port 8000
-```
+This project aims to develop an automated image-based skin disease classification system using deep learning.
 
-### 2. Start Frontend Dev Server
-```bash
-cd frontend
-# Install dependencies
-npm install
+The system follows a two-stage prediction pipeline:
 
-# Launch Vite frontend on http://localhost:5173
-npm run dev
-```
+```text
+                Input Image
+                     │
+                     ▼
+        ┌─────────────────────────┐
+        │       Stage 1           │
+        │ Skin / Non-Skin         │
+        │    Classifier           │
+        └────────────┬────────────┘
+                     │
+             ┌───────┴────────┐
+             │                │
+          Non-Skin           Skin
+             │                │
+             ▼                ▼
+        Reject Image     ┌───────────────┐
+                         │    Stage 2    │
+                         │ Hybrid CNN +  │
+                         │  Transformer  │
+                         └───────┬───────┘
+                                 │
+                                 ▼
+                       Skin Disease Class
+                                 │
+                                 ▼
+                       Confidence Score
+                                 │
+                                 ▼
+                         Supabase Storage
+                         + Prediction DB
 
-Open your browser at `http://localhost:5173` to launch DermoAI!
+The final project status is present in "Major_Project_2"
+
+🚧 Current Project Status
+Completed
+ Skin disease classification project architecture
+ Dataset preparation
+ Hybrid CNN–Transformer model development
+ Stage 2 disease classification model
+ Stage 1 skin/non-skin classifier
+ Stage 1 MobileNetV2 training
+ Stage 1 evaluation
+ FastAPI backend
+ Image upload API
+ Image validation
+ Two-stage prediction pipeline
+ Pydantic prediction response schema
+ Supabase integration
+ Image storage
+ Prediction storage
+ React + Vite frontend
+ Frontend-backend API communication
+ Docker containerization
+ Google Artifact Registry setup
+ Google Cloud Run deployment
+ Google Secret Manager integration
+ Vercel frontend deployment
+ Local FastAPI testing
+ Production API deployment

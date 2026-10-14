@@ -44,8 +44,8 @@ def history_by_id(prediction_id:int):
 
 @router.delete(
     "/{prediction_id}",
-    summary="Delete a Prediction",
-    description="Deletes a prediction record and its associated image from Supabase Storage."
+    summary="🗑️Delete a Prediction",
+    description="🗑️Deletes a prediction record and its associated image from Supabase Storage."
 )
 
 def delete_history(prediction_id:int):
@@ -58,5 +58,5 @@ def delete_history(prediction_id:int):
 
     return{
         "success":True,
-        "message":"Prediction deleted successfully."
+        "message":"Prediction deleted successfully✅."
     }
