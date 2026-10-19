@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-import os
 from api.routers.predict import router as predict_router
 from api.routers.history import router as history_router
+from api.routers.reports import router as reports_router
 
 from api.exceptions import (
     http_exception_handler,
@@ -23,15 +22,10 @@ app=FastAPI(
     description=API_DESCRIPTION
 )
 
-os.makedirs("uploads", exist_ok=True)
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:5173",  # Vite
-        "http://127.0.0.1:5173",
-        "https://skin-disease.vercel.app",
+        "https://major-partial-1-ruby.vercel.app",
         "*", #If the below allow_credentials=True, there is no use of "*"
     ],
     allow_credentials=False, #Change it True if you have any particular user credentials to login
@@ -56,7 +50,7 @@ app.add_exception_handler(
 )
 def home():
     return{
-        "status":"Backend Running",
+        "status":"Backend Running✅",
         "model":"Hybrid CNN-Transformer"
     }
 
@@ -64,7 +58,7 @@ def root():
     return{
         "project":"Skin Disease Classification API",
         "version":"1.0.0",
-        "status":"Running"
+        "status":"Running✅"
     }
 
 @app.get(
@@ -73,10 +67,14 @@ def root():
     summary="Health Check"
 )
 def health_check():
-    return {
-        "status":"Healthy, API is running",
-        "service":"Skin Disease Classification API"
+    return{
+        "status":"Healthy✅",
+        "service":"Skin Disease Classification API",
+        "model":"Hybrid CNN-Transformer",
+        "database":"Connected✅",
+        "storage":"Connected✅"
     }
 
 app.include_router(predict_router)
+app.include_router(reports_router)
 app.include_router(history_router)

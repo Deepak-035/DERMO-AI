@@ -1,0 +1,54 @@
+#Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+#Virtual Environment
+venv/
+.venv/
+env/
+ENV/
+
+#Environment Variables
+.env
+.env.*
+cloudrun-env.yaml
+cloudrun-env.json
+
+#IDE
+.vscode/
+.idea/
+
+#Logs
+*.log
+logs/
+
+#Pytest / Cache
+.pytest_cache/
+.mypy_cache/
+.cache/
+
+#OS Files
+.DS_Store
+Thumbs.db
+
+#Build Files
+build/
+dist/
+*.egg-info/
+
+#Uploaded Images
+uploads/
+temp/
+tmp/
+
+#ML Models
+*.pt
+*.pth
+
+#Jupyter
+.ipynb_checkpoints/
+
+#Misc
+*.sqlite3
+*.db

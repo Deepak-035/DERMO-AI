@@ -1,18 +1,39 @@
-export const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+export const API_BASE_URL = rawBaseUrl.replace(/\/+$/, '');
+
 
 export interface PredictionResult {
   prediction: string;
   code: string;
   confidence: number;
   image_url: string;
+
+  // Report details
+  prediction_id?: number;
+  report_id?: number;
+  report_number?: string;
+  report_download_url?: string;
+
+  // Stage 2 probabilities
+  normal_skin_probability?: number;
+  lesion_skin_probability?: number;
+
+  // Optional classification details
+  classification?: string;
+  skin_probability?: number;
+  non_skin_probability?: number;
+  threshold?: number;
 }
 
 export interface PredictionResponse {
   success: boolean;
   message: string;
   filename: string;
+  stage?: number;
   result: PredictionResult;
+  warnings: string[];
 }
+
 
 export interface HistoryItem {
   id: number;

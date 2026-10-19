@@ -6,13 +6,23 @@ import { SecondaryButton } from '@/components/SecondaryButton';
 import { UploadCloud, Loader2, AlertCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { predictImage, getImageUrl } from '@/services/api';
+import DownloadReportButton from '@/components/DownloadReportButton';
 
 export default function Predict() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ label: string; confidence: number; code: string; imageUrl: string } | null>(null);
+
+  const [result, setResult] = useState<{
+    label: string;
+    confidence: number;
+    code: string;
+    imageUrl: string;
+    warnings: string[];
+    reportId?: number;
+    reportDownloadUrl?: string;
+  } | null>(null);
 
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -50,8 +60,12 @@ export default function Predict() {
           label: response.result.prediction,
           confidence: response.result.confidence,
           code: response.result.code,
-          imageUrl: getImageUrl(response.result.image_url) || preview!,
+          imageUrl: getImageUrl(response.result.image_url),
+          warnings: response.warnings || [],
+          reportId: response.result.report_id,
+          reportDownloadUrl: response.result.report_download_url,
         });
+
       } else {
         throw new Error(response.message || 'Prediction failed');
       }
@@ -141,7 +155,28 @@ export default function Predict() {
                   </div>
                   <Progress value={result.confidence} className="h-2 bg-slate-800" />
                 </div>
-                
+                {result.warnings.length>0 && (
+                    <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
+                        <h4 className="mb-2 text-sm font-semibold text-yellow-300">
+                            ⚠ Warnings
+                        </h4>
+                        <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-200">
+                            {result.warnings.map((warning,index) => (
+                                <li key={index}>{warning}</li>
+                            ))}
+                        </ul>
+                    </div>
+                )}
+
+                {result.reportId && (
+                  <div className="pt-2">
+                    <DownloadReportButton
+                      reportId={result.reportId}
+                      reportDownloadUrl={result.reportDownloadUrl}
+                    />
+                  </div>
+                )}
+
                 <div className="pt-4">
                   <button 
                     onClick={() => { setFile(null); setPreview(null); setResult(null); setError(null); }}
