@@ -2,39 +2,29 @@
 # Python 3.11+ Recommended
 
 # FastAPI Backend
-fastapi==0.116.1
-uvicorn==0.35.0
-python-multipart==0.0.20
-
-# Database
-psycopg2-binary==2.9.10
+fastapi>=0.116.1
+uvicorn>=0.35.0
+python-multipart>=0.0.20
 
 # Supabase
-supabase==2.18.1
-postgrest==1.1.1
-realtime==2.7.0
-storage3==0.12.1
-supafunc==0.10.1
-
-# Environment Variables
-python-dotenv==1.1.1
+supabase>=2.18.1
+python-dotenv>=1.1.1
 
 # Machine Learning
-torch==2.9.0
-torchvision==0.24.0
+torch>=2.9.0
+torchvision>=0.24.0
 
 # Image Processing
-Pillow==11.3.0
-opencv-python-headless==4.12.0.88
+Pillow>=11.3.0
+opencv-python-headless>=4.10.0
 
 # Data Processing
-numpy==2.2.6
-pandas==2.3.2
+numpy>=2.0.0
+pandas>=2.0.0
 
 # Validation
-pydantic==2.11.7
+pydantic>=2.11.0
 
 # Utilities
-tqdm==4.67.1
-
-reportlab
+tqdm>=4.67.0
+reportlab>=4.0.0
