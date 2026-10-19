@@ -30,11 +30,16 @@ transform = transforms.Compose([
 ])
 
 
+from api.logger import logger
+
+
 def load_model():
     if not MODEL_PATH.exists():
-        raise FileNotFoundError(
-            f"Skin-lesion model not found: {MODEL_PATH}"
+        logger.warning(
+            f"Skin-lesion model checkpoint not found: {MODEL_PATH}. "
+            "Stage 2 normal/lesion check will be bypassed until the file is provided."
         )
+        return None, None
 
     # This checkpoint was created by your own Colab training notebook.
     checkpoint = torch.load(
@@ -77,6 +82,14 @@ def classify_skin_lesion(image_path: str) -> dict:
 
     Returns the predicted class and both class probabilities.
     """
+    if model is None or idx_to_class is None:
+        logger.warning("Skin-lesion model unavailable. Proceeding directly to disease prediction.")
+        return {
+            "predicted_class": "lesion_skin",
+            "normal_skin_probability": 0.0,
+            "lesion_skin_probability": 1.0,
+        }
+
     with Image.open(image_path) as image:
         image = image.convert("RGB")
         image_tensor = transform(image).unsqueeze(0).to(DEVICE)
