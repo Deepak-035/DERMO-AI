@@ -4,7 +4,7 @@ DERMO-AI is an end-to-end medical deep-learning web platform designed for automa
 
 The system features a **3-stage sequential inference pipeline** powered by a **Hybrid CNN–Transformer** architecture (79% test accuracy on HAM10000), paired with a modern **React 19 + TypeScript** glassmorphic frontend, a **FastAPI** backend, and **Supabase** for role-based authentication (RBAC), private cloud storage, and database persistence.
 
----
+## Repository Structure
 
 ## 🌟 Key Platform Features
 
@@ -25,7 +25,10 @@ The system features a **3-stage sequential inference pipeline** powered by a **H
 - **Quality & Preprocessing Checks**:
   - OpenCV-based blur detection, brightness validation, and resolution bounds to minimize prediction artifacts.
 
----
+### `main`
+- Contains the initial project files and earlier implementation.
+- Retained for reference purposes only.
+- No use of it.
 
 ## 🔬 Classification Models & Performance
 

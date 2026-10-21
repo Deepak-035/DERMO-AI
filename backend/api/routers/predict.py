@@ -19,6 +19,7 @@ UPLOAD_DIR = Path(UPLOAD_FOLDER)
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
+
 @router.post(
     "",
     summary="Predict Skin Disease",
