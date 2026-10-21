@@ -1,329 +1,236 @@
-# DermoAI - Frontend Architecture & Frontend-Backend Integration Guide
+# DERMO-AI Frontend — Architecture & Frontend-Backend Integration Guide
 
-This document provides a detailed, step-by-step breakdown of how the **DermoAI** frontend was designed, built, and connected to the FastAPI deep-learning backend for real-time skin disease classification.
+This guide details the design, architecture, and frontend-backend integration of the **DERMO-AI** client application.
+
+DERMO-AI features a futuristic glassmorphic UI built with **React 19**, **TypeScript**, **Vite**, **Tailwind CSS**, and **Framer Motion**, communicating with a **FastAPI** backend and **Supabase** authentication and database.
 
 ---
 
 ## 📖 Table of Contents
-1. [Overview & Tech Stack](#1-overview--tech-stack)
+1. [Tech Stack](#1-tech-stack)
 2. [Project Directory Structure](#2-project-directory-structure)
-3. [Step-by-Step: How We Built the Frontend](#3-step-by-step-how-we-built-the-frontend)
-4. [Step-by-Step: How We Connected Frontend & Backend](#4-step-by-step-how-we-connected-frontend--backend)
-   - [Step 1: Environment Variable Setup](#step-1-environment-variable-setup)
-   - [Step 2: Centralized API Service (`src/services/api.ts`)](#step-2-centralized-api-service-srcservicesapits)
-   - [Step 3: Backend Health Monitoring on Dashboard](#step-3-backend-health-monitoring-on-dashboard)
-   - [Step 4: Real-Time Image Upload & ML Prediction (`Predict.tsx`)](#step-4-real-time-image-upload--ml-prediction-predicttsx)
-   - [Step 5: Dynamic History Fetching & Deletion (`History.tsx`)](#step-5-dynamic-history-fetching--deletion-historytsx)
-5. [Data Flow Diagrams](#5-data-flow-diagrams)
-6. [How to Run & Verify](#6-how-to-run--verify)
+3. [Design System & UI Components](#3-design-system--ui-components)
+4. [Step-by-Step Frontend-Backend Integration](#4-step-by-step-frontend-backend-integration)
+   - [Step 1: Environment Variables](#step-1-environment-variables)
+   - [Step 2: Authentication & RBAC (`AuthContext.tsx`, `ProtectedRoute.tsx`)](#step-2-authentication--rbac)
+   - [Step 3: Centralized API Service (`src/services/api.ts`)](#step-3-centralized-api-service)
+   - [Step 4: Image Analysis & Prediction (`Predict.tsx`)](#step-4-image-analysis--prediction)
+   - [Step 5: Dynamic Skin Condition Educational Guide (`SkinConditionGuide.tsx`)](#step-5-dynamic-skin-condition-educational-guide)
+   - [Step 6: Clinical Assessment PDF Report Download (`DownloadReportButton.tsx`)](#step-6-clinical-assessment-pdf-report-download)
+   - [Step 7: Screening History & Management (`History.tsx`)](#step-7-screening-history--management)
+   - [Step 8: Administrative Analytics Console (`AdminDashboard.tsx`)](#step-8-administrative-analytics-console)
+5. [Class Mapping Architecture (`classMapping.ts`)](#5-class-mapping-architecture)
+6. [Data Flow Diagrams](#6-data-flow-diagrams)
+7. [Running & Building Locally](#7-running--building-locally)
 
 ---
 
-## 1. Overview & Tech Stack
+## 1. Tech Stack
 
-### Frontend Stack:
-- **Framework**: [React 18](https://react.dev/) + [Vite](https://vitejs.dev/) + [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: Vanilla CSS + [Tailwind CSS](https://tailwindcss.com/)
-- **Animations**: [Framer Motion](https://www.framer.com/motion/) (floating card physics, page transitions)
+- **Framework**: [React 19](https://react.dev/) + [Vite](https://vitejs.dev/) + [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS v3](https://tailwindcss.com/) + CSS Glassmorphism
+- **Animations**: [Framer Motion](https://www.framer.com/motion/)
 - **Icons**: [Lucide React](https://lucide.dev/)
-- **Routing**: [React Router DOM v6](https://reactrouter.com/)
-
-### Backend Stack:
-- **Framework**: [FastAPI](https://fastapi.tiangolo.com/) (Python)
-- **Machine Learning**: PyTorch (`HybridCNNTransformer` model - CNN features + Transformer attention)
-- **Database & Storage**: Supabase PostgreSQL + Supabase Storage (with automatic local fallback to `uploads/` folder + `predictions_db.json`).
+- **Routing**: [React Router DOM v7](https://reactrouter.com/)
+- **Backend Communication**: Fetch API with Bearer token authentication via Supabase JWT sessions.
+- **Client SDK**: `@supabase/supabase-js` for authentication, session recovery, and RLS queries.
 
 ---
 
 ## 2. Project Directory Structure
 
-```
+```text
 frontend/
-├── .env                       # Backend URL configuration (VITE_API_URL)
-├── index.html                 # Main HTML template
+├── .env.example               # Template environment configuration
+├── index.html                 # HTML shell
 ├── package.json               # Dependencies and scripts
-├── tailwind.config.js         # Tailwind theme & color definitions
-├── src/
-│   ├── main.tsx               # Entry point
-│   ├── App.tsx                # Client-side router configuration & global logout button
-│   ├── index.css              # Global styles, scrollbars, background video layers
-│   │
-│   ├── services/
-│   │   └── api.ts             # Centralized API service layer (Connecting Frontend -> Backend)
-│   │
-│   ├── pages/
-│   │   ├── Login.tsx          # Glassmorphism login & sign-up page
-│   │   ├── Dashboard.tsx      # Landing page with system metrics & live backend health status
-│   │   ├── Predict.tsx        # Drag-and-drop image analyzer page (POST /predict)
-│   │   └── History.tsx        # History gallery page with delete functionality (GET & DELETE /history)
-│   │
-│   ├── components/
-│   │   ├── FloatingNav.tsx    # Glassmorphic top navigation bar
-│   │   ├── LevitatingCard.tsx # Animated glass container with hover effects
-│   │   ├── BackgroundVideo.tsx# Background video overlay component
-│   │   ├── SecondaryButton.tsx# Neon cyan action button
-│   │   └── ui/
-│   │       └── progress.tsx   # Confidence level indicator bar
+├── tailwind.config.js         # Tailwind theme & color extensions
+├── tsconfig.json              # TypeScript configuration
+├── vite.config.ts             # Vite build settings & @/ alias
+│
+└── src/
+    ├── main.tsx               # Application entry point
+    ├── App.tsx                # Client-side router with role-protected routes
+    ├── index.css              # Global styles, backdrop blurs, and glassmorphism rules
+    ├── App.css                # Layout styling
+    │
+    ├── context/
+    │   └── AuthContext.tsx    # Supabase Auth provider, session caching, & role state
+    │
+    ├── lib/
+    │   ├── supabase.ts        # Supabase JS client initialization
+    │   └── utils.ts           # Utility functions (cn / clsx / twMerge)
+    │
+    ├── services/
+    │   └── api.ts             # Centralized API service (prediction, reports, guides, admin)
+    │
+    ├── utils/
+    │   └── classMapping.ts    # Model label & code to canonical class_key mapper
+    │
+    ├── components/
+    │   ├── BackgroundVideo.tsx# Ambient dark video background overlay
+    │   ├── DownloadReportButton.tsx # PDF download handler with blob generation
+    │   ├── FloatingNav.tsx    # Responsive glassmorphic navigation bar
+    │   ├── LevitatingCard.tsx # Framer Motion animated glass card
+    │   ├── ProtectedRoute.tsx # Route guard enforcing authentication & allowed roles
+    │   ├── SecondaryButton.tsx# Neon cyan action button component
+    │   ├── SkinConditionGuide.tsx # Dynamic educational guide component
+    │   └── ui/                # Core Radix-based UI widgets (progress, buttons, cards)
+    │
+    └── pages/
+        ├── Login.tsx          # Authentication (Sign in, sign up, Google OAuth)
+        ├── Dashboard.tsx      # User hub with live backend status & quick links
+        ├── Predict.tsx        # Drag-and-drop screening & educational guide view
+        ├── History.tsx        # Personal screening records with PDF download & delete
+        ├── DoctorDashboard.tsx# Doctor review interface
+        └── AdminDashboard.tsx # System metrics, user administration, & audit logs
 ```
 
 ---
 
-## 3. Step-by-Step: How We Built the Frontend
+## 3. Design System & UI Components
 
-### Step 1: Design System & Glassmorphism Aesthetic
-- Created a dark-mode, futuristic medical UI using glassmorphism properties (`backdrop-filter: blur()`, semi-transparent black overlays, subtle white borders).
-- Custom levitating animations were created in `LevitatingCard.tsx` using `framer-motion` to create floating physics for cards on the screen.
-
-### Step 2: Component Architecture
-- **`FloatingNav.tsx`**: A sticky top navigation bar allowing seamless navigation between **Home**, **Predict**, and **History**.
-- **`BackgroundVideo.tsx`**: Renders a dark ambient video in the background with an overlay to ensure optimal content legibility.
-- **`SecondaryButton.tsx`**: Reusable button component styled with hover animations and disabled states.
-
-### Step 3: Page Layouts & Client-Side Routing
-- Configured routes in `App.tsx` using `react-router-dom`:
-  - `/` → `Login.tsx`
-  - `/dashboard` → `Dashboard.tsx`
-  - `/predict` → `Predict.tsx`
-  - `/history` → `History.tsx`
+The interface employs a dark-mode, futuristic medical aesthetic:
+- **Glassmorphic Panels**: Translucent dark surfaces (`bg-slate-900/80`, `backdrop-blur-xl`, `border-cyan-500/30`) with neon cyan, amber, and purple accents.
+- **Floating Physics**: `LevitatingCard.tsx` uses Framer Motion spring physics to provide smooth interactive hover elevation.
+- **Visual Feedback**: Real-time progress bars, pulsing urgency indicators, and distinct status alert badges (`Urgent`, `Prompt`, `Routine`).
 
 ---
 
-## 4. Step-by-Step: How We Connected Frontend & Backend
+## 4. Step-by-Step Frontend-Backend Integration
 
-Connecting a React frontend to a FastAPI backend requires a robust client-server architecture handling HTTP communication, multipart form-data uploads, JSON parsing, environment configuration, and error states. Here is how we did it:
-
-### Step 1: Environment Variable Setup
-
-We created a `.env` file in the root of the `frontend/` directory:
-
+### Step 1: Environment Variables
+Create a `.env` file in the `frontend/` directory (modeled after `.env.example`):
 ```env
 VITE_API_URL=http://localhost:8000
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-This ensures the backend URL is centralized. In production, this can be pointed to any remote server domain without modifying source code.
+### Step 2: Authentication & RBAC
+- Managed in `src/context/AuthContext.tsx`.
+- Listens to `supabase.auth.onAuthStateChange`.
+- Fetches the verified user profile and role (`user` or `admin`) from `public.profiles`.
+- Routes in `App.tsx` are wrapped with `<ProtectedRoute allowedRoles={['user', 'admin']}>`.
+
+### Step 3: Centralized API Service (`src/services/api.ts`)
+- All requests flow through `authorizedFetch(path, options)`.
+- Automatically retrieves active Supabase session tokens (`supabase.auth.getSession()`) and injects `Authorization: Bearer <token>`.
+
+### Step 4: Image Analysis & Prediction (`Predict.tsx`)
+1. User drops or selects an image (`PNG`, `JPG`, `JPEG` up to 5MB).
+2. Image is displayed in a local preview using `URL.createObjectURL(file)`.
+3. Clicking **Analyze Image** triggers `predictImage(file)` via `POST /predict`.
+4. Upon receiving the result:
+   - Displays the disease name, short code, and confidence progress bar.
+   - Any image quality warnings (e.g. low resolution, blur) are rendered in a warning banner.
+   - Displays `<DownloadReportButton />` if report generation succeeded.
+   - Mounts the `<SkinConditionGuide />` component dynamically below the result card.
+
+### Step 5: Dynamic Skin Condition Educational Guide (`SkinConditionGuide.tsx`)
+- Props: `predictionLabel={result.label}` and `predictionCode={result.code}`.
+- Normalizes model labels via `mapModelClassToKey()` from `classMapping.ts`.
+- Fetches condition data via `getEducationalGuide(classKey)`.
+- Renders 7 expandable accordion sections:
+  1. **About this condition**: Pathological description and overview.
+  2. **Causes and Risk Factors**: Medically supported risk factors (distinguished from individual causes).
+  3. **Warning Signs & Changes to Watch**: ABCDE criteria and alert symptoms.
+  4. **Precautions & Evidence-Based Prevention**: Sun safety and surveillance habits.
+  5. **Recommended Next Steps**: Medical triage advice and clinical examination necessity.
+  6. **Clinician-Directed Treatment Overview**: Non-prescriptive treatment modalities.
+  7. **References & Medical Review Status**: Citations to AAD, NCI, NCCN, and DermNet NZ.
+- Includes **Expand All** and **Collapse All** controls.
+- Displays a mandatory **Medical Screening Disclaimer** banner.
+
+### Step 6: Clinical Assessment PDF Report Download (`DownloadReportButton.tsx`)
+- Downloads the clinical PDF report via `GET /reports/{id}/download`.
+- Converts the binary response to an in-memory `Blob` and triggers browser file download.
+- **Strict PDF Independence**: Educational guide content is completely isolated to the web interface and never alters the PDF report structure or download payload.
+
+### Step 7: Screening History & Management (`History.tsx`)
+- Fetches private records via `GET /history`.
+- Users can re-download their assessment PDF reports or permanently delete records via `DELETE /history/{id}`.
+
+### Step 8: Administrative Analytics Console (`AdminDashboard.tsx`)
+- Accessible strictly to users with `role: 'admin'`.
+- Displays real-time registration activity, classification metrics, diagnostic class breakdowns, and user role management.
 
 ---
 
-### Step 2: Centralized API Service (`src/services/api.ts`)
+## 5. Class Mapping Architecture (`classMapping.ts`)
 
-Instead of writing `fetch()` calls directly inside UI components, we built a dedicated API service layer in `src/services/api.ts`.
-
-#### A. Type-Safe Interfaces
-We defined TypeScript interfaces matching the exact JSON payloads returned by FastAPI backend endpoints:
+Located in `src/utils/classMapping.ts`, the mapping utility bridges model-generated codes and labels to canonical backend `class_key` identifiers:
 
 ```typescript
-export interface PredictionResult {
-  prediction: string;  // e.g. "Melanocytic Nevus"
-  code: string;        // e.g. "nv"
-  confidence: number;  // e.g. 98.45
-  image_url: string;   // e.g. "/uploads/uuid.png" or Supabase Cloud URL
-}
-
-export interface HistoryItem {
-  id: number;
-  filename: string;
-  image_url: string;
-  prediction: string;
-  code: string;
-  confidence: number;
-  created_at: string;
-}
+export const MODEL_CLASS_TO_KEY: Record<string, string> = {
+  nv: 'melanocytic_nevus',
+  mel: 'melanoma',
+  bkl: 'benign_keratosis',
+  bcc: 'basal_cell_carcinoma',
+  akiec: 'actinic_keratoses',
+  vasc: 'vascular_lesion',
+  df: 'dermatofibroma',
+  'melanocytic nevus': 'melanocytic_nevus',
+  'melanoma': 'melanoma',
+  // ...other variations and synonyms
+};
 ```
 
-#### B. Smart Image URL Formatting Helper
-When backend runs in local/mock storage mode, `image_url` is a relative path (e.g., `/uploads/filename.png`). When running with Supabase Cloud, `image_url` is a full URL (`https://...supabase.co/...`).
-
-We created `getImageUrl()` to dynamically format the URL for `<img src="..." />`:
-
-```typescript
-export function getImageUrl(path: string | undefined): string {
-  if (!path) return '';
-  if (path.startsWith('http://') || path.startsWith('https://') || path.startsWith('blob:')) {
-    return path; // Already a full URL or blob preview
-  }
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  return `${API_BASE_URL}${cleanPath}`; // Prepends http://localhost:8000
-}
-```
-
-#### C. API Communication Methods
-
-1. **`checkHealth()`**: Checks backend status via `GET http://localhost:8000/health`.
-2. **`predictImage(file: File)`**:
-   - Constructs a native browser `FormData` object.
-   - Appends `file` as binary multipart data (`formData.append('file', file)`).
-   - Sends a `POST` request to `${API_BASE_URL}/predict`.
-   - Returns the prediction result from the ML model.
-3. **`getHistory(limit, offset)`**: Sends a `GET` request to `${API_BASE_URL}/history` to retrieve past screening records.
-4. **`deleteHistory(id: number)`**: Sends a `DELETE` request to `${API_BASE_URL}/history/${id}` to delete a record and its saved image.
+If an unknown class or non-lesion identifier (such as `normal_skin` or `non_skin`) is received, `mapModelClassToKey()` returns `null`, preventing the application from displaying an incorrect or substituted guide.
 
 ---
 
-### Step 3: Backend Health Monitoring on Dashboard
+## 6. Data Flow Diagrams
 
-In `Dashboard.tsx`, we added a live API connectivity badge:
+### Prediction & Educational Guide Retrieval Flow
 
-```typescript
-const [isBackendHealthy, setIsBackendHealthy] = useState<boolean | null>(null);
-
-useEffect(() => {
-  checkHealth().then(setIsBackendHealthy);
-}, []);
-```
-
-- If `isBackendHealthy === true` → Displays **"FastAPI Backend Online & Ready"** with a green checkmark.
-- If `isBackendHealthy === false` → Displays **"Backend Disconnected (Run python backend)"** with an amber warning icon.
-
----
-
-### Step 4: Real-Time Image Upload & ML Prediction (`Predict.tsx`)
-
-In `Predict.tsx`, we connected the file upload UI to the FastAPI prediction engine:
-
-1. **File Selection & Local Preview**:
-   When an image is dropped or selected via `<input type="file" />`, a temporary client-side URL is generated with `URL.createObjectURL(selectedFile)` for instantaneous preview.
-
-2. **Submitting to Backend**:
-   When the user clicks **"Analyze Image"**, `handleAnalyze()` executes:
-
-   ```typescript
-   const handleAnalyze = async () => {
-     if (!file) return;
-     setIsAnalyzing(true);
-     setError(null);
-
-     try {
-       const response = await predictImage(file);
-       if (response.success && response.result) {
-         setResult({
-           label: response.result.prediction,
-           confidence: response.result.confidence,
-           code: response.result.code,
-           imageUrl: getImageUrl(response.result.image_url) || preview!,
-         });
-       }
-     } catch (err: any) {
-       setError(err.message || 'Failed to connect to backend server.');
-     } finally {
-       setIsAnalyzing(false);
-     }
-   };
-   ```
-
-3. **Rendering the Result**:
-   - **Loading State**: Displays an animated `Loader2` spinner with `"Analyzing with Hybrid CNN-Transformer..."`.
-   - **Result State**: Displays the predicted disease name (e.g. `Melanoma`), confidence percentage progress bar, disease code badge (e.g., `MEL`), and the server image.
-   - **Error Handling**: Displays a red alert banner if file size exceeds 5MB or backend is unreachable.
-
----
-
-### Step 5: Dynamic History Fetching & Deletion (`History.tsx`)
-
-In `History.tsx`, we replaced static mock arrays with live database interaction:
-
-1. **Fetching History**:
-   ```typescript
-   useEffect(() => {
-     const fetchHistoryData = async () => {
-       setIsLoading(true);
-       try {
-         const items = await getHistory();
-         setHistory(items);
-       } catch (err: any) {
-         setError(err.message);
-       } finally {
-         setIsLoading(false);
-       }
-     };
-     fetchHistoryData();
-   }, []);
-   ```
-
-2. **Deleting a Record**:
-   ```typescript
-   const handleDelete = async (id: number) => {
-     if (!window.confirm('Delete this record?')) return;
-     try {
-       await deleteHistory(id);
-       setHistory((prev) => prev.filter((item) => item.id !== id));
-     } catch (err) {
-       alert(`Error deleting record: ${err.message}`);
-     }
-   };
-   ```
-
-- Each history card displays the saved image via `getImageUrl(item.image_url)`, confidence percentage, disease code badge, formatted timestamp, and a trash icon button for deleting records.
-
----
-
-## 5. Data Flow Diagrams
-
-### Prediction Request Flow
-```
-[User Selects Image] 
-        │
-        ▼
-[Predict.tsx] ──── (FormData with File) ────► [POST http://localhost:8000/predict]
-                                                     │
-                                                     ▼
-                                            [FastAPI Backend]
-                                                     │
-                                                     ├── 1. PyTorch Hybrid CNN-Transformer
-                                                     ├── 2. Save Image (Supabase / Local uploads/)
-                                                     └── 3. Record in DB (Supabase / predictions_db.json)
-                                                     │
-[Predict.tsx] ◄─── (Prediction JSON Result) ─────────┘
-        │
-        ▼
-[Renders Disease Name, Confidence Bar & Image]
-```
-
-### History Retrieval Flow
-```
-[User Opens /history] 
-        │
-        ▼
-[History.tsx (useEffect)] ─── (GET) ───► [GET http://localhost:8000/history]
-                                                 │
-                                                 ▼
-                                        [FastAPI Backend]
-                                                 │
-                                                 └── Reads from DB (Supabase / predictions_db.json)
-                                                 │
-[History.tsx] ◄─── (Array of Predictions) ───────┘
-        │
-        ▼
-[Renders Responsive Grid of Saved Cards]
+```text
+User uploads image -> Predict.tsx
+      │
+      ▼
+predictImage(file) -> POST /predict (FastAPI)
+      │
+      ▼
+Inference Pipeline (Stage 1 -> Stage 2 -> Stage 3)
+      │
+      ▼
+Returns: { success: true, result: { prediction: "Melanoma", code: "mel", confidence: 94.2 } }
+      │
+      ├─────────────────────────────────────────┐
+      ▼                                         ▼
+Render Diagnostic Card                 Mount <SkinConditionGuide />
+• Label: "Melanoma (MEL)"              • Calls mapModelClassToKey("mel") -> "melanoma"
+• Confidence Bar: 94.2%                 • Calls getEducationalGuide("melanoma")
+• Download Report Button               • Queries GET /guides/melanoma (or Supabase RLS)
+                                       • Renders interactive accordion with:
+                                         - Urgent Review Badge
+                                         - Medical Disclaimer
+                                         - 7 Evidence-Based Sections
 ```
 
 ---
 
-## 6. How to Run & Verify
+## 7. Running & Building Locally
 
-### 1. Start the FastAPI Backend
-Open a terminal in `backend/`:
-```bash
-# Activate virtual environment if configured
-# source venv/bin/activate (Linux/Mac) or venv\Scripts\activate (Windows)
-
-# Run FastAPI server on port 8000
-uvicorn api.main:app --reload --port 8000
-```
-- Backend Swagger API Docs: `http://localhost:8000/docs`
-- Health check: `http://localhost:8000/health`
-
-### 2. Start the React Frontend
-Open a terminal in `frontend/`:
-```bash
-# Install dependencies
+### Install Dependencies:
+```powershell
+cd frontend
 npm install
+```
 
-# Start Vite dev server
+### Start Development Server:
+```powershell
 npm run dev
 ```
-- Open browser at `http://localhost:5173`.
+Open [http://localhost:5173](http://localhost:5173).
 
-### 3. Verify Integration
-1. Check the Dashboard page: Verify the green **"FastAPI Backend Online & Ready"** status badge.
-2. Go to `/predict`: Drag and drop a skin lesion image (or use `backend/test_skin_lesion.png`) and click **"Analyze Image"**. Verify live prediction output.
-3. Go to `/history`: Verify your new prediction appears in the history list, and try deleting a record using the trash button.
+### Linting:
+```powershell
+npm run lint
+```
+
+### Production Build:
+```powershell
+npx vite build
+```
+Build output is generated into the `dist/` directory.

@@ -1,166 +1,113 @@
-# Skin Disease Classification API
-A FastAPI backend for skin disease classification using a Hybrid CNN-Transformer model.
-The API accepts a skin lesion image, validates the image quality, predicts the disease class, uploads the image to Supabase Storage and stores prediction history in Supabase Database.
+# DERMO-AI Backend — Developer Quickstart & API Guide
+
+A FastAPI backend for skin disease screening, sequential deep-learning inference, PDF assessment reporting, and dynamic educational guidance.
+
 ---
-## Features
-- Skin disease classification
-- Hybrid CNN + Transformer model
-- FastAPI REST API
-- Supabase Storage integration
-- Supabase Database integration
-- Image upload
-- Prediction history
-- Confidence score
-- Image quality validation
+
+## 🚀 Key Modules & Endpoints
+
+| Endpoint | Method | Description | Auth Required |
+|---|:---:|---|:---:|
+| `/health` | `GET` | Health check (DB, Storage, Model status) | No |
+| `/predict` | `POST` | Upload image & run 3-stage classification pipeline | Yes (User/Admin) |
+| `/guides` | `GET` | Retrieve list of all published educational guides | No |
+| `/guides/{class_key}` | `GET` | Fetch educational guide for a specific condition | No |
+| `/reports/{id}/download` | `GET` | Download PDF medical report by report ID | Yes (Owner/Admin) |
+| `/reports/prediction/{id}/download` | `GET` | Download PDF medical report by prediction ID | Yes (Owner/Admin) |
+| `/history` | `GET` | Retrieve user's past screening results | Yes (Owner/Admin) |
+| `/history/{id}` | `DELETE` | Delete history entry and associated image | Yes (Owner/Admin) |
+| `/admin/users` | `GET` | Manage users and view screening statistics | Yes (Admin only) |
+| `/admin/stats` | `GET` | System-wide analytics & diagnosis breakdown | Yes (Admin only) |
+| `/admin/audit-logs` | `GET` | System activity audit logs | Yes (Admin only) |
+
 ---
-## Validation Pipeline
-### Image Validation
-- File extension validation
-- Image verification
-- Corrupted image detection
 
-### Quality Checks
-- Resolution check
-- Brightness check
-- Blur detection
+## 🔬 Sequential Inference Architecture
 
-### Prediction
-- Confidence threshold
+1. **Pre-processing & Validation**:
+   - Resolution, contrast, brightness bounds, and Laplacian blur detection (`OpenCV`).
+2. **Stage 1 (MobileNetV2)**:
+   - Skin vs. Non-Skin validation. Rejects non-skin images early.
+3. **Stage 2 (EfficientNetB0)**:
+   - Normal Skin vs. Lesion-Affected Skin classification.
+4. **Stage 3 (Hybrid CNN–Transformer)**:
+   - Classifies lesion images into 7 classes: `nv`, `mel`, `bkl`, `bcc`, `akiec`, `vasc`, `df`.
+
 ---
-## Tech Stack
-Backend
-- FastAPI
-- Python
 
-Machine Learning
-- PyTorch
-- TorchVision
+## 📚 Educational Guides Service
 
-Image Processing
-- Pillow
-- OpenCV
+- Route: `/guides/{class_key}`
+- Supported codes & keys:
+  - `nv` / `melanocytic_nevus`
+  - `mel` / `melanoma`
+  - `bkl` / `benign_keratosis`
+  - `bcc` / `basal_cell_carcinoma`
+  - `akiec` / `actinic_keratoses`
+  - `vasc` / `vascular_lesion`
+  - `df` / `dermatofibroma`
+- Connected to Supabase table `public.skin_condition_guides` with in-memory baseline fallback.
 
-Database
-- Supabase PostgreSQL
-
-Storage
-- Supabase Storage
-
-Validation
-- Pydantic
 ---
-## Project Structure
-```
+
+## 🛠️ Project Structure
+
+```text
 backend/
-│
 ├── api/
-│   ├── routers/
-│   ├── services/
-│   ├── ml/
-│   ├── schemas/
-│   ├── main.py
-│   ├── config.py
-│   ├── logger.py
-│   └── supabase_client.py
-│
-├── requirements.txt
-├── .gitignore
-└── README.md
+│   ├── ml/                    # Models (Hybrid CNN-Transformer), labels, inference
+│   ├── routers/               # predict, reports, history, admin, guides
+│   ├── schemas/               # Pydantic schemas (prediction, history, guide)
+│   ├── services/              # Business logic (prediction, storage, report, guide)
+│   ├── auth.py                # Supabase Auth JWT verification & RBAC
+│   ├── config.py              # Environment configuration & constants
+│   ├── logger.py              # Logging setup
+│   ├── main.py                # FastAPI entry point
+│   └── supabase_client.py     # Supabase client setup
+├── trained_models/            # PyTorch model weights (.pth)
+├── uploads/                   # Temporary file processing directory
+├── test_educational_guides.py# Automated unit test suite
+├── Database_Table_Code.sql    # Complete SQL schema & RLS policies
+├── requirements.txt           # Python dependencies
+└── .env.example               # Environment variables template
 ```
+
 ---
-## Installation
-Clone the repository
-```bash
-git clone <repository-url>
-```
 
-Move into the project
-```bash
+## 💻 Setup & Run Locally
+
+### 1. Create Virtual Environment
+```powershell
 cd backend
+python -m venv .venv
+.\.venv\Scripts\activate
 ```
 
-Create virtual environment
-```bash
-python -m venv venv
-```
-
-Activate virtual environment
-Windows
-```bash
-venv\Scripts\activate
-```
-
-Linux/macOS
-```bash
-source venv/bin/activate
-```
-
-Install dependencies
-```bash
+### 2. Install Dependencies
+```powershell
 pip install -r requirements.txt
 ```
 
----
-## Environment Variables
-Create a `.env` file.
-
+### 3. Environment Variables
+Copy `.env.example` to `.env`:
 ```env
-SUPABASE_URL=YOUR_SUPABASE_URL
-SUPABASE_KEY=YOUR_SUPABASE_ANON_KEY
-```
----
-## Run the API
-```bash
-uvicorn api.main:app --reload
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_service_role_key
+VITE_API_URL=http://localhost:8000
 ```
 
-Server
-```
-http://127.0.0.1:8000
-```
-
-Swagger Documentation
-```
-http://127.0.0.1:8000/docs
+### 4. Start Server
+```powershell
+python -m uvicorn api.main:app --port 8000
 ```
 
-ReDoc
-```
-http://127.0.0.1:8000/redoc
-```
+Access OpenAPI Swagger docs at: `http://localhost:8000/docs`
 
 ---
-## API Endpoints
-### Predict
+
+## 🧪 Running Tests
+
+Run the educational guides unit tests:
+```powershell
+python -m unittest test_educational_guides.py
 ```
-POST /predict
-```
-
-Upload an image and receive:
-- Predicted disease
-- Confidence score
-- Warnings (if any)
-- Image URL
-
----
-### Prediction History
-```
-GET /history
-```
-
-Returns previously stored predictions.
----
-## Model
-The backend uses a Hybrid CNN-Transformer model implemented in PyTorch for multi-class skin disease classification.
----
-
-## Remaining Work
-- Frontend integration
-- Authentication
----
-
-## Supabase PostgreSQL Code
-The Code is present in "Database_Table_Code.sql" file.Paste in the Supabase SQL Editor and Run it.
-
-## Supabase Storage Bucket
-The Supabase Storage Bucket named "skin-images" needs to be created manually for storing the uploaded images. 

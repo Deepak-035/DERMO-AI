@@ -13,6 +13,14 @@ class PredictionResult(BaseModel):
     non_skin_probability: Optional[float] = None
     threshold: Optional[float] = None
 
+    normal_skin_probability: Optional[float] = None
+    lesion_skin_probability: Optional[float] = None
+
+    prediction_id: Optional[int] = None
+    report_id: Optional[int] = None
+    report_number: Optional[str] = None
+    report_download_url: Optional[str] = None
+
 
 class PredictionResponse(BaseModel):
     success: bool
