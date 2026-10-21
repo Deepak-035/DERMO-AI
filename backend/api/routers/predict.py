@@ -1,59 +1,63 @@
 import uuid
 from pathlib import Path
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from api.schemas.prediction import PredictionResponse
-from fastapi import APIRouter,UploadFile,File,HTTPException
 from api.services.prediction_service import predict_image
-from api.config import(
+from api.auth import get_current_user, AuthenticatedUser
+from api.config import (
     ALLOWED_IMAGE_TYPES,
     MAX_UPLOAD_SIZE,
-    UPLOAD_FOLDER
+    UPLOAD_FOLDER,
 )
 
-router=APIRouter(
+router = APIRouter(
     prefix="/predict",
-    tags=["Prediction"]
+    tags=["Prediction"],
 )
 
-UPLOAD_DIR=Path(UPLOAD_FOLDER)
-UPLOAD_DIR.mkdir(parents=True,exist_ok=True)
+UPLOAD_DIR = Path(UPLOAD_FOLDER)
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @router.post(
     "",
     summary="Predict Skin Disease",
-    description="Upload a skin image and receive the predicted disease with confidence score.",
-    response_model=PredictionResponse
+    description="Upload a skin image and receive the predicted disease with confidence score, securely associated with the authenticated patient.",
+    response_model=PredictionResponse,
 )
-
-async def predict(file:UploadFile=File(...)):
-    #Validate file type
+async def predict(
+    file: UploadFile = File(...),
+    current_user: AuthenticatedUser = Depends(get_current_user),
+):
+    # Validate file type
     if file.content_type not in ALLOWED_IMAGE_TYPES:
         raise HTTPException(
             status_code=400,
-            detail="⚠️Only JPG,JPEG and PNG images are allowed."
+            detail="⚠️ Only JPG, JPEG, and PNG images are allowed.",
         )
 
-    #Generate unique filename
-    extension=Path(file.filename).suffix
-    filename=f"{uuid.uuid4()}{extension}"
-    file_path=UPLOAD_DIR / filename
+    # Generate unique filename
+    extension = Path(file.filename).suffix
+    filename = f"{uuid.uuid4()}{extension}"
+    file_path = UPLOAD_DIR / filename
 
-    #Read uploaded file
-    contents=await file.read()
+    # Read uploaded file
+    contents = await file.read()
 
-    #Validate file size
-    if len(contents)>MAX_UPLOAD_SIZE:
+    # Validate file size
+    if len(contents) > MAX_UPLOAD_SIZE:
         raise HTTPException(
             status_code=400,
-            detail="⚠️ Maximum file size is 5 MB."
+            detail="⚠️ Maximum file size is 5 MB.",
         )
 
-    #Save temporary file
-    with open(file_path,"wb") as buffer:
+    # Save temporary file
+    with open(file_path, "wb") as buffer:
         buffer.write(contents)
 
-    # Return the response directly from the service
+    # Return the response directly from the service with verified patient ownership
     return predict_image(
-        str(file_path),
-        filename
+        image_path=str(file_path),
+        filename=filename,
+        user_id=current_user.id,
     )

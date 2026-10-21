@@ -7,6 +7,7 @@ import { UploadCloud, Loader2, AlertCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { predictImage, getImageUrl } from '@/services/api';
 import DownloadReportButton from '@/components/DownloadReportButton';
+import SkinConditionGuide from '@/components/SkinConditionGuide';
 
 export default function Predict() {
   const [file, setFile] = useState<File | null>(null);
@@ -134,60 +135,68 @@ export default function Predict() {
             </div>
           </LevitatingCard>
         ) : (
-          <LevitatingCard className="p-8 border-green-500/30">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Analysis Result</h2>
-            <div className="grid md:grid-cols-2 gap-8 items-center">
-              <div className="flex justify-center">
-                <img src={result.imageUrl || preview!} alt="Analyzed" className="rounded-xl border border-white/10 shadow-2xl shadow-cyan-500/30 max-h-64 object-cover" />
-              </div>
-              <div className="space-y-6">
-                <div>
-                  <p className="text-sm text-slate-400 uppercase tracking-wider mb-1">Predicted Disease ({result.code.toUpperCase()})</p>
-                  <h3 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">
-                    {result.label}
-                  </h3>
+          <div className="space-y-6">
+            <LevitatingCard className="p-8 border-green-500/30">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">Analysis Result</h2>
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div className="flex justify-center">
+                  <img src={result.imageUrl || preview!} alt="Analyzed" className="rounded-xl border border-white/10 shadow-2xl shadow-cyan-500/30 max-h-64 object-cover" />
                 </div>
-                
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-300">Confidence</span>
-                    <span className="text-cyan-400 font-bold">{result.confidence}%</span>
+                <div className="space-y-6">
+                  <div>
+                    <p className="text-sm text-slate-400 uppercase tracking-wider mb-1">Predicted Disease ({result.code.toUpperCase()})</p>
+                    <h3 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">
+                      {result.label}
+                    </h3>
                   </div>
-                  <Progress value={result.confidence} className="h-2 bg-slate-800" />
-                </div>
-                {result.warnings.length>0 && (
-                    <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
-                        <h4 className="mb-2 text-sm font-semibold text-yellow-300">
-                            ⚠ Warnings
-                        </h4>
-                        <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-200">
-                            {result.warnings.map((warning,index) => (
-                                <li key={index}>{warning}</li>
-                            ))}
-                        </ul>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-300">Confidence</span>
+                      <span className="text-cyan-400 font-bold">{result.confidence}%</span>
                     </div>
-                )}
-
-                {result.reportId && (
-                  <div className="pt-2">
-                    <DownloadReportButton
-                      reportId={result.reportId}
-                      reportDownloadUrl={result.reportDownloadUrl}
-                    />
+                    <Progress value={result.confidence} className="h-2 bg-slate-800" />
                   </div>
-                )}
+                  {result.warnings.length>0 && (
+                      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
+                          <h4 className="mb-2 text-sm font-semibold text-yellow-300">
+                              ⚠ Warnings
+                          </h4>
+                          <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-200">
+                              {result.warnings.map((warning,index) => (
+                                  <li key={index}>{warning}</li>
+                              ))}
+                          </ul>
+                      </div>
+                  )}
 
-                <div className="pt-4">
-                  <button 
-                    onClick={() => { setFile(null); setPreview(null); setResult(null); setError(null); }}
-                    className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
-                  >
-                    ← Analyze another image
-                  </button>
+                  {(result.reportId || result.reportDownloadUrl) && (
+                    <div className="pt-2">
+                      <DownloadReportButton
+                        reportId={result.reportId}
+                        reportDownloadUrl={result.reportDownloadUrl}
+                      />
+                    </div>
+                  )}
+
+                  <div className="pt-4">
+                    <button 
+                      onClick={() => { setFile(null); setPreview(null); setResult(null); setError(null); }}
+                      className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
+                    >
+                      ← Analyze another image
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          </LevitatingCard>
+            </LevitatingCard>
+
+            {/* Educational Guide for the Predicted Class */}
+            <SkinConditionGuide
+              predictionLabel={result.label}
+              predictionCode={result.code}
+            />
+          </div>
         )}
       </main>
 

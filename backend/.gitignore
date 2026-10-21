@@ -12,6 +12,7 @@ ENV/
 #Environment Variables
 .env
 .env.*
+!.env.example
 cloudrun-env.yaml
 cloudrun-env.json
 

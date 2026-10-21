@@ -1,318 +1,231 @@
-# DERMO-AI — Skin Disease Classification using a Hybrid CNN–Transformer Model
+# DERMO-AI — Backend Architecture & API Technical Specification
 
-DERMO-AI is a deep-learning-based skin disease classification system that combines image validation, sequential image classification models, and a Hybrid CNN–Transformer architecture. The backend uses FastAPI, with Supabase for image and prediction storage.
+This document provides a comprehensive technical overview of the **DERMO-AI Backend**, built with **FastAPI**, **PyTorch**, **ReportLab**, and **Supabase**.
 
-The system uses three sequential classification stages:
+---
 
-1. **Stage 1 — Skin vs. Non-Skin Classification:** MobileNetV2 determines whether the uploaded image contains skin.
-2. **Stage 2 — Normal Skin vs. Lesion-Affected Skin Classification:** EfficientNetB0 classifies skin images as normal-looking skin or lesion-affected skin.
-3. **Stage 3 — Skin Disease Classification:** The Hybrid CNN–Transformer model predicts the disease category for images classified as lesion-affected skin.
+## 📋 Table of Contents
+1. [Overview & Capabilities](#1-overview--capabilities)
+2. [Sequential 3-Stage Inference Pipeline](#2-sequential-3-stage-inference-pipeline)
+3. [Skin Condition Educational Guides System](#3-skin-condition-educational-guides-system)
+4. [PDF Clinical Assessment Report Generation](#4-pdf-clinical-assessment-report-generation)
+5. [Database Architecture & Migrations](#5-database-architecture--migrations)
+6. [API Endpoints Reference](#6-api-endpoints-reference)
+7. [Authentication & Role-Based Access Control (RBAC)](#7-authentication--role-based-access-control-rbac)
+8. [Testing & Verification](#8-testing--verification)
+9. [Local Development Setup](#9-local-development-setup)
 
-The purpose of this pipeline is to reject irrelevant uploads early, avoid running disease classification on images classified as normal-looking skin, and reserve the final disease classifier for lesion-positive images.
+---
 
-## Repository Structure
+## 1. Overview & Capabilities
 
-```text
-main
-├── MP_1
-├── MP_2
-│   └── Trained_Model
-└── MP_2_H
-    └── Hybrid_Model
-```
+The DERMO-AI backend orchestrates:
+- **Computer Vision & Deep Learning**: Validates images, filters out non-skin inputs, checks for normal skin, and classifies skin lesions using a state-of-the-art Hybrid CNN–Transformer model.
+- **RESTful API**: Fast, asynchronous endpoints documented automatically via OpenAPI/Swagger.
+- **Dynamic Educational Guides**: Serves medically referenced condition information for the 7 supported disease classes.
+- **Automated Clinical PDF Reporting**: Creates formatted medical summary PDFs uploaded to private Supabase Storage buckets without leaking educational guides into the report.
+- **Two-Role Security**: Enforces Row Level Security (RLS) for regular users and administrative staff.
 
-The exact directory structure may vary between project branches and deployment configurations.
+---
 
-## Branch Details
+## 2. Sequential 3-Stage Inference Pipeline
 
-### `main`
-- Contains the initial project files and earlier implementation.
-- Retained for reference purposes.
-
-### `MP_1`
-- EfficientNet-B0 CNN with frozen feature extraction.
-- Only the classifier layers were trained.
-- **Reported test accuracy: 63%.**
-
-### `MP_2`
-- EfficientNet-B0 CNN with full fine-tuning.
-- All model layers were unfrozen during fine-tuning.
-- Represents the improved CNN baseline.
-- **Reported test accuracy: 73%.**
-
-### `MP_2_H`
-- Proposed Hybrid CNN–Transformer architecture.
-- Combines EfficientNet-B0 for local feature extraction with a Transformer Encoder for global feature learning.
-- **Reported test accuracy: 79%.**
-
-### `Trained_Model`
-- Contains trained weights for the EfficientNet-B0 `MP_2` model.
-- **Reported model accuracy: 73%.**
-
-### `Hybrid_Model`
-- Contains trained weights for the Hybrid CNN–Transformer `MP_2_H` model.
-- **Reported model accuracy: 79%.**
-
-## Model Performance
-
-The following figures are the previously reported results for the skin disease classification models. They should not be interpreted as the measured performance of the newly introduced normal-skin vs. lesion-skin classifier.
-
-| Model | Architecture | Reported Test Accuracy |
-|---|---|---:|
-| MP_1 | EfficientNet-B0, frozen feature extraction | 63% |
-| MP_2 | EfficientNet-B0, full fine-tuning | 73% |
-| MP_2_H | Hybrid CNN–Transformer | **79%** |
-
-## Project Highlights
-
-- Skin disease classification using the HAM10000 dataset.
-- Transfer learning with EfficientNet-B0.
-- Full fine-tuning for improved CNN performance.
-- Hybrid CNN–Transformer architecture.
-- Class-weighted Cross Entropy Loss.
-- AdamW optimizer.
-- Learning-rate scheduling.
-- Image validation and quality checks.
-- Sequential classification pipeline.
-- FastAPI-based prediction API.
-- Supabase image storage and prediction persistence.
-- Docker-based backend containerization.
-- Google Cloud Run backend deployment.
-- Vercel frontend deployment.
-
-### Model Evaluation
-
-Model evaluation includes:
-
-- Classification report.
-- Confusion matrix.
-- ROC curve.
-- Precision–recall curve.
-- Misclassified image analysis.
-- Accuracy, precision, recall, F1-score and other relevant metrics, where measured.
-
-## Classification Pipeline
+The backend executes a 3-stage sequential inference pipeline to prevent unnecessary computation and false classifications on irrelevant uploads:
 
 ```text
-Uploaded Image
-      |
-      v
-Image Validation
-      |
-      v
-Stage 1: MobileNetV2
-Skin vs. Non-Skin
-      |
-      +---- Non-Skin
-      |        |
-      |        v
-      |   Reject Upload
-      |
-      v
-Stage 2: EfficientNetB0
-Normal Skin vs. Lesion Skin
-      |
-      +---- Normal-Looking Skin
-      |        |
-      |        v
-      |   Return Classification
-      |   Skip Disease Prediction
-      |
-      v
-Stage 3: Hybrid CNN–Transformer
-Skin Disease Classification
-      |
-      v
-Prediction Result
-      |
-      v
-Supabase Image Storage
-and Prediction Storage
+                     Uploaded Image
+                           │
+                           ▼
+              ┌──────────────────────────┐
+              │ Pre-validation & Quality │ (PIL + OpenCV: Dim, Brightness, Blur)
+              └────────────┬─────────────┘
+                           │
+                           ▼
+              ┌──────────────────────────┐
+              │         Stage 1          │
+              │  MobileNetV2 Classifier  │ (Skin vs. Non-Skin)
+              └────────────┬─────────────┘
+                           │
+                ┌──────────┴──────────┐
+                │ Skin                │ Non-Skin
+                ▼                     ▼
+     ┌─────────────────────┐    Reject early: 
+     │       Stage 2       │    "It appears to not be a lesion image."
+     │    EfficientNetB0   │    (HTTP 200, success: false)
+     └──────────┬──────────┘
+                │
+         ┌──────┴──────┐
+         │ Lesion      │ Normal Skin
+         ▼             ▼
+┌──────────────────┐ Early return: 
+│     Stage 3      │ "The image was classified as normal-looking skin."
+│ Hybrid CNN +     │ (HTTP 200, success: true)
+│ Transformer      │
+└────────┬─────────┘
+         │
+         ▼
+Prediction Result: 7 Diagnostic Classes + Confidence Score
 ```
 
-### Stage 1 — Skin vs. Non-Skin Classification
+### Stage Details:
+1. **Stage 1 (Skin Validation)**:
+   - Model: MobileNetV2 fine-tuned on skin vs. non-skin photographic datasets.
+   - Threshold: Reject non-skin images (e.g. background scenery, clothes, animals).
+2. **Stage 2 (Normal Skin vs. Lesion-Affected Skin)**:
+   - Model: EfficientNetB0.
+   - Purpose: Identifies healthy epidermis and avoids running lesion classification on non-pathological skin.
+3. **Stage 3 (Lesion Classification)**:
+   - Model: **Hybrid CNN–Transformer** (`HybridCNNTransformer`).
+   - Architecture: Combines convolutional feature extraction with multi-head self-attention mechanisms to capture both fine local textures and global lesion morphology.
+   - Accuracy: **79% Test Accuracy on HAM10000**.
 
-**Model:** MobileNetV2
+---
 
-The first stage determines whether the uploaded image is classified as skin or non-skin.
+## 3. Skin Condition Educational Guides System
 
-- Uses the trained MobileNetV2 model.
-- Produces skin and non-skin probabilities.
-- Applies a configured classification threshold.
-- Rejects images classified as non-skin before proceeding to subsequent stages.
+Implemented in `api/routers/guides.py` and `api/services/guide_service.py`, this system delivers clinically referenced educational content dynamically when requested by the web client.
 
-### Stage 2 — Normal Skin vs. Lesion-Affected Skin
+### Supported Classes & Stable Keys:
+1. `melanocytic_nevus` (Melanocytic Nevus - `nv`)
+2. `melanoma` (Melanoma - `mel`)
+3. `benign_keratosis` (Benign Keratosis - `bkl`)
+4. `basal_cell_carcinoma` (Basal Cell Carcinoma - `bcc`)
+5. `actinic_keratoses` (Actinic Keratoses - `akiec`)
+6. `vascular_lesion` (Vascular Lesion - `vasc`)
+7. `dermatofibroma` (Dermatofibroma - `df`)
 
-**Model:** EfficientNetB0
+### Data Model (`api/schemas/guide.py`):
+Each educational guide includes:
+- `class_key`: Unique canonical identifier.
+- `display_name`: Human-readable condition name.
+- `overview`: Anatomical and pathological overview.
+- `risk_factors`: Array of evidence-based statistical risk factors.
+- `warning_signs`: Array of alert signs (including ABCDE criteria).
+- `prevention`: Evidence-based preventive guidelines.
+- `recommended_actions`: Medical next steps and clinical urgency guidance.
+- `treatment_overview`: Clinician-directed treatment options (non-prescriptive).
+- `urgency_level`: Categorized urgency (`routine`, `prompt`, `urgent`).
+- `sources`: Literature references (AAD, NCCN, NCI, DermNet NZ).
+- `review_status`: Publication status (`draft`, `reviewed`, `published`).
 
-The second stage classifies images that have passed Stage 1 into two classes:
+### Fallback & Resilience:
+- When queried, `guide_service.get_guide_by_key()` attempts to query the `skin_condition_guides` PostgreSQL table.
+- If the table is not yet migrated in the cloud project, it automatically falls back to an in-memory baseline dictionary, ensuring 100% server uptime and zero downtime during database setup.
 
-| Class | Description |
-|---|---|
-| `normal_skin` | Image classified as normal-looking skin |
-| `lesion_skin` | Image classified as lesion-affected skin |
+---
 
-The model is trained using transfer learning from ImageNet-pretrained EfficientNetB0 and a two-class classification head.
+## 4. PDF Clinical Assessment Report Generation
 
-The training workflow includes:
+Clinical reports are created using **ReportLab** in `api/services/report_service.py`.
 
-- Dataset preparation and label filtering.
-- Image deduplication.
-- Case-level train, validation and test splitting.
-- Image augmentation for training.
-- Class-weighted Cross Entropy Loss.
-- AdamW optimization.
-- Learning-rate scheduling.
-- Early stopping based on validation loss.
-- Best-checkpoint saving.
-- Evaluation using accuracy, precision, recall, F1-score, ROC-AUC and a confusion matrix.
+### PDF Isolation & Separation:
+- **Strict Isolation**: Educational guide content is **never** embedded in or passed to the PDF generator.
+- The PDF contains exclusively:
+  - Report metadata (Report Number, Timestamp, Prediction Record ID).
+  - Diagnostic prediction output and model confidence.
+  - Normal/lesion probabilities.
+  - Image quality warnings (blur, underexposure, etc.).
+  - Uploaded lesion image thumbnail.
+  - Official medical screening disclaimer.
+- The generated PDF is uploaded to Supabase Storage bucket `medical-reports` and linked in the `reports` table.
 
-The model checkpoint and training outputs are stored in Google Drive.
+---
 
-**Inference behavior:**
-- If the image is classified as `normal_skin`, the pipeline returns the classification without running the disease classifier.
-- If the image is classified as `lesion_skin`, the pipeline continues to Stage 3.
+## 5. Database Architecture & Migrations
 
-The model's predictions are image classifications, not medical confirmation that skin is healthy or diseased.
+All tables are defined with Row Level Security (RLS) enabled. Migrations are organized chronologically in `supabase/migrations/`:
 
-### Stage 3 — Skin Disease Classification
+### 1. `public.profiles` (`20261019_auth_rbac_privacy.sql`, `20261020_two_role_system.sql`)
+- Stores user accounts and authorization roles (`user` or `admin`).
+- Handled automatically via signup triggers on `auth.users`.
 
-**Model:** Hybrid CNN–Transformer
+### 2. `public.predictions` (`20261019_auth_rbac_privacy.sql`)
+- Stores prediction results (`prediction`, `code`, `confidence`, `image_url`, `user_id`).
 
-The final stage classifies lesion-positive images into the disease categories supported by the trained model.
+### 3. `public.reports` (`20261019_auth_rbac_privacy.sql`)
+- Stores generated PDF metadata (`report_number`, `prediction_id`, `pdf_storage_path`, `user_id`).
 
-The architecture combines:
+### 4. `public.skin_condition_guides` (`20261021_skin_condition_guides.sql`)
+- Stores dynamic educational content.
+- **RLS Policies**:
+  - `SELECT`: Public and authenticated users can view published records (`review_status = 'published'`). Admins can view all records.
+  - `INSERT/UPDATE/DELETE`: Restricted strictly to administrators via `public.is_admin(auth.uid())`.
 
-- EfficientNet-B0 for local visual feature extraction.
-- Transformer Encoder layers for global feature learning.
-- A classification head for disease prediction.
+---
 
-The existing inference module returns the predicted disease category, its associated code and the model's confidence value.
+## 6. API Endpoints Reference
 
-The reported test accuracy for this model is 79%, as documented in the existing project results.
+### General
+- `GET /`: Service heartbeat.
+- `GET /health`: Comprehensive health check (Database, Storage, Model status).
 
-## Backend Technologies
+### Prediction
+- `POST /predict`: Upload image (`multipart/form-data`) and execute 3-stage classification pipeline.
+  - Requires: Bearer token (Supabase JWT).
+  - Returns: `PredictionResponse` containing classification, confidence, warnings, and report metadata.
 
-| Technology | Purpose |
-|---|---|
-| Python | Backend and machine-learning implementation |
-| FastAPI | REST API and image-prediction endpoints |
-| PyTorch | Model loading and inference |
-| Torchvision | Model architectures and image transformations |
-| MobileNetV2 | Stage 1 skin/non-skin classifier |
-| EfficientNetB0 | Stage 2 normal-skin/lesion-skin classifier |
-| Hybrid CNN–Transformer | Stage 3 disease classifier |
-| Pillow | Image loading and validation |
-| OpenCV | Image quality checks and blur detection |
-| Pydantic | Request and response validation |
-| Supabase | Database and image storage |
-| Docker | Backend containerization |
-| Google Artifact Registry | Container image storage |
-| Google Cloud Run | Backend deployment |
-| Google Secret Manager | Deployment secrets |
-| React and Vite | Frontend application |
-| Vercel | Frontend deployment |
+### Educational Guides
+- `GET /guides`: Returns all published educational guides.
+- `GET /guides/{class_key}`: Returns the educational guide for the specified model code or canonical key. Returns 404 for unknown classes.
 
-## Backend Features
+### Reports
+- `GET /reports/{report_id}/download`: Download report PDF by report ID.
+- `GET /reports/prediction/{prediction_id}/download`: Download report PDF associated with a prediction ID.
 
-### Image Upload and Validation
+### History
+- `GET /history`: Retrieve user's screening history.
+- `DELETE /history/{id}`: Delete a prediction record and its associated private scan from storage.
 
-The prediction pipeline validates uploaded images before classification. Validation includes:
+### Admin
+- `GET /admin/users`: List registered accounts and classification activity.
+- `POST /admin/users/{id}/role`: Update a user's role (`user` vs `admin`).
+- `GET /admin/stats`: System-wide screening analytics and diagnostic class breakdown.
+- `GET /admin/audit-logs`: Audit log inspection.
 
-- Image integrity checks.
-- Minimum resolution warnings.
-- High-resolution warnings.
-- Brightness checks.
-- Blur detection.
-- Invalid or corrupted image handling.
+---
 
-These checks help identify potential image-quality problems. Quality warnings do not guarantee that an image is suitable for medical interpretation.
+## 7. Authentication & Role-Based Access Control (RBAC)
 
-### Prediction API
+- Handled in `api/auth.py`.
+- Authenticates requests by verifying Supabase JWTs via **JWKS** (JSON Web Key Set) using public keys from Supabase Auth (`/.well-known/jwks.json`).
+- Role determination: Queries `public.profiles` for `role` (`user` or `admin`).
+- Functions requiring admin access use FastAPI dependencies to enforce authorization.
 
-The FastAPI backend coordinates all three classification stages.
+---
 
-The pipeline returns structured prediction information, including applicable classification probabilities, prediction results and warnings.
+## 8. Testing & Verification
 
-The response depends on the stage at which processing stops. Non-skin images are rejected at Stage 1, normal-looking skin images return at Stage 2, and lesion-positive images proceed to Stage 3.
+A dedicated unit test suite in `test_educational_guides.py` verifies the educational guides system:
 
-### Supabase Integration
+```powershell
+python -m unittest test_educational_guides.py
+```
 
-For completed disease predictions, the backend:
+### Verified Test Cases:
+1. `test_all_seven_classes_present_in_baseline`: Verifies all 7 classes have complete medical fields.
+2. `test_class_info_model_mapping`: Verifies that short codes and names in `CLASS_INFO` map accurately to stable keys.
+3. `test_api_endpoint_retrieval_all_classes`: Verifies `GET /guides/{class_key}` returns HTTP 200 with proper payloads.
+4. `test_api_endpoint_list_guides`: Verifies `GET /guides` returns all published guides.
+5. `test_unknown_class_safe_handling`: Verifies invalid inputs return HTTP 404 without falsifying or crashing.
+6. `test_pdf_report_separation`: Verifies `report_service.py` signature does not accept or process educational guide objects.
 
-- Uploads the image to Supabase Storage.
-- Stores the prediction, associated code, confidence and image URL in the predictions table.
-- Returns the prediction result to the frontend.
+---
 
-The current pipeline returns early for non-skin and normal-looking skin classifications. Those early-return paths do not perform the same image-upload and disease-prediction database operations as the final disease-classification path.
+## 9. Local Development Setup
 
-## Trained Models
+### 1. Environment Configuration
+Create a `.env` file in `backend/` from `.env.example`:
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_supabase_service_role_key
+VITE_API_URL=http://localhost:8000
+```
 
-The project uses three models in the inference pipeline:
-
-| Stage | Model | Task |
-|---|---|---|
-| Stage 1 | MobileNetV2 | Skin vs. non-skin |
-| Stage 2 | EfficientNetB0 | Normal skin vs. lesion-affected skin |
-| Stage 3 | Hybrid CNN–Transformer | Skin disease classification |
-
-The backend requires the corresponding trained checkpoints to be present at the configured model paths.
-
-The Stage 2 EfficientNetB0 checkpoint is produced by the Google Colab training workflow. Its class mapping must be loaded from the checkpoint to ensure that model output indices correspond to the correct class names.
-
-## Deployment
-
-The project deployment workflow uses:
-
-- Docker for containerizing the FastAPI backend.
-- Google Artifact Registry for storing backend container images.
-- Google Cloud Run for hosting the backend API.
-- Google Secret Manager for sensitive deployment configuration.
-- Vercel for frontend hosting.
-- Supabase for database and image storage.
-
-When updating a trained model, the new checkpoint must be included in the backend build and deployed with the updated application code. The deployed service should be tested to verify that all three stages load and execute correctly.
-
-## Current Project Status
-
-### Machine Learning
-- [x] Skin disease classification architecture.
-- [x] Dataset preparation for the original disease classifier.
-- [x] EfficientNet-B0 CNN baseline development.
-- [x] Hybrid CNN–Transformer model development.
-- [x] Stage 1 skin/non-skin classifier.
-- [x] Stage 1 MobileNetV2 training and evaluation.
-- [x] Stage 2 normal-skin/lesion-skin classifier development.
-- [x] EfficientNetB0 Stage 2 model training.
-- [x] Training history and evaluation output generation.
-
-### Backend
-- [x] FastAPI backend.
-- [x] Image upload API.
-- [x] Image validation and quality checks.
-- [x] Sequential three-stage prediction pipeline implementation.
-- [x] Pydantic prediction response schema.
-- [x] Supabase integration.
-- [x] Image storage integration.
-- [x] Prediction storage for completed disease predictions.
-
-### Frontend and Deployment
-- [x] React and Vite frontend.
-- [x] Frontend-backend API communication.
-- [x] Docker containerization.
-- [x] Google Artifact Registry setup.
-- [x] Google Cloud Run deployment.
-- [x] Google Secret Manager integration.
-- [x] Vercel frontend deployment.
-- [x] Local FastAPI testing.
-- [x] Production API deployment.
-
-> Status checkboxes reflect the project status documented by the project team. The latest deployment should still be tested after integrating the new model checkpoint.
-
-## Limitations
-
-DERMO-AI is a research and academic project. Its classification outputs should not be treated as medical diagnoses.
-
-The normal-skin vs. lesion-skin classifier depends on the quality and representativeness of its training labels and images. A prediction of `normal_skin` does not rule out skin disease, and a prediction of `lesion_skin` does not establish a particular diagnosis.
-
-Reported model accuracies are specific to their respective evaluation datasets and should not be assumed to represent performance on all real-world images.
+### 2. Execution
+```powershell
+cd backend
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt
+python -m uvicorn api.main:app --port 8000
+```

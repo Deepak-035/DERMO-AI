@@ -1,4 +1,5 @@
 import io
+import os
 import uuid
 from datetime import datetime, timezone
 from xml.sax.saxutils import escape
@@ -174,10 +175,19 @@ def generate_and_store_report(
 
     # Include the uploaded scan when it can be opened safely.
     try:
-        with PILImage.open(image_path) as source_image:
-            source_image.verify()
+        source_image = None
+        if image_path and os.path.exists(image_path):
+            with PILImage.open(image_path) as img:
+                img.verify()
+            source_image = PILImage.open(image_path)
+        elif image_url and (image_url.startswith("http://") or image_url.startswith("https://")):
+            import urllib.request
+            req = urllib.request.Request(image_url, headers={"User-Agent": "Mozilla/5.0"})
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = resp.read()
+                source_image = PILImage.open(io.BytesIO(data))
 
-        with PILImage.open(image_path) as source_image:
+        if source_image:
             source_image = source_image.convert("RGB")
             source_image.thumbnail((900, 700))
 
@@ -194,8 +204,8 @@ def generate_and_store_report(
                     kind="proportional",
                 ),
             ])
-    except Exception:
-        logger.warning("Could not embed scan image in report PDF.")
+    except Exception as e:
+        logger.warning(f"Could not embed scan image in report PDF: {e}")
 
     story.append(Paragraph("Image Quality Warnings", styles["SectionHeading"]))
 

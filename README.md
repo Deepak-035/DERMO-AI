@@ -1,184 +1,264 @@
-# Skin Disease Classification using a Hybrid CNN–Transformer Model
+# DERMO-AI — Advanced Skin Disease Classification & Clinical Guidance Platform
 
-This repository contains the implementation of a **Skin Disease Classification** system using deep learning. The project explores the performance of a baseline **EfficientNet-B0 CNN** model and a proposed **Hybrid CNN–Transformer** architecture.
+DERMO-AI is an end-to-end medical deep-learning web platform designed for automated skin lesion screening, clinical report generation, and evidence-based educational guidance.
 
-## Repository Structure
-
-```
-main
-├── MP_1
-├── MP_2
-│   └── Trained_Model
-└── MP_2_H
-    └── Hybrid_Model
-```
-
-## Branch Details
-
-### `main`
-- Contains the initial project files and earlier implementation.
-- Retained for reference purposes only.
-- No use of it.
-
-### `MP_1`
-- EfficientNet-B0 (CNN) with **Frozen Feature Extraction**.
-- Only the classifier layers were trained.
-- **Test Accuracy:** **63%**
-
-### `MP_2`
-- EfficientNet-B0 (CNN) with **Full Fine-Tuning** (all layers unfrozen).
-- Represents the improved CNN baseline.
-- **Test Accuracy:** **73%**
-
-### `MP_2_H`
-- Proposed **Hybrid CNN–Transformer** architecture.
-- Combines EfficientNet-B0 (the same `MP_2` code)for local feature extraction with a Transformer Encoder (code) for global feature learning.
-- **Test Accuracy:** **79%**
-
-### `Trained_Model`
-- Contains the trained weights (`.pth`) for the EfficientNet-B0 `MP_2` model.
-- **Model Accuracy:** **73%**
-
-### `Hybrid_Model`
-- Contains the trained weights (`.pth`) for the Hybrid CNN–Transformer `MP_2_H` model.
-- **Model Accuracy:** **79**
+The system features a **3-stage sequential inference pipeline** powered by a **Hybrid CNN–Transformer** architecture (79% test accuracy on HAM10000), paired with a modern **React 19 + TypeScript** glassmorphic frontend, a **FastAPI** backend, and **Supabase** for role-based authentication (RBAC), private cloud storage, and database persistence.
 
 ---
 
-## Model Performance
+## 🌟 Key Platform Features
 
-| Model  |                Architecture                 | Test Accuracy |
-|--------|---------------------------------------------|--------------:|
-| MP_1   | EfficientNet-B0 (Frozen Feature Extraction) | 63%           |
-| MP_2   | EfficientNet-B0 (Full Fine-Tuning)          | 73%           |
-| MP_2_H | Hybrid CNN–Transformer                      | **79%**       |
-
----
-
-## Project Highlights
-
-- Skin Disease Classification using the HAM10000 dataset
-- Transfer Learning with EfficientNet-B0
-- Full Fine-Tuning for improved performance
-- Hybrid CNN–Transformer architecture
-- Class-weighted Cross Entropy Loss
-- AdamW Optimizer
-- Learning Rate Scheduling
-- Comprehensive model evaluation using:
-  - Classification Report
-  - Confusion Matrix
-  - ROC Curve
-  - Precision–Recall Curve
-  - Misclassified Image Analysis
+- **Sequential 3-Stage Classification Pipeline**:
+  - **Stage 1 (Skin Validation)**: MobileNetV2 rejects non-skin uploads (clothing, backgrounds, objects) early.
+  - **Stage 2 (Lesion Detection)**: EfficientNetB0 distinguishes normal-looking skin from lesion-affected skin.
+  - **Stage 3 (7-Class Disease Classification)**: Hybrid CNN–Transformer model classifies lesion-affected skin into 7 diagnostic categories.
+- **Dynamic Skin Condition Educational Guide**:
+  - Immediately displays medically referenced educational guidance below the prediction result on the web application.
+  - Provides detailed sections: *About this condition*, *Causes & Risk Factors*, *Warning Signs (ABCDEs)*, *Precautions & Prevention*, *Recommended Next Steps & Clinical Urgency*, *Treatment Overview*, and *Literature Sources (AAD, NCCN, DermNet NZ)*.
+  - Includes responsive accordions, urgency badges (`Urgent`, `Prompt`, `Routine`), and non-diagnostic safety disclaimers.
+- **Strict PDF Report Separation**:
+  - Automatically compiles and stores downloadable clinical assessment PDF reports (ReportLab).
+  - Educational guide content is strictly isolated to the web result interface and does not leak into or alter clinical PDF reports.
+- **Two-Role Authentication & Access Control (RBAC)**:
+  - Built on Supabase Auth with Row Level Security (RLS).
+  - Supports `user` (patient screening, private history, report download) and `admin` (audit logs, user management, system analytics).
+- **Quality & Preprocessing Checks**:
+  - OpenCV-based blur detection, brightness validation, and resolution bounds to minimize prediction artifacts.
 
 ---
 
-## Trained Models
+## 🔬 Classification Models & Performance
 
-The repository includes the trained model weights for:
+The core lesion classifier was trained and evaluated on the **HAM10000** dermatoscopic dataset across 7 diagnostic classes:
 
-- EfficientNet-B0 (Full Fine-Tuning)
-- Hybrid CNN–Transformer
+| Model Version | Architecture Description | Test Accuracy | Status |
+|---|---|:---:|:---:|
+| **MP_1** | EfficientNet-B0 (Frozen Feature Extractor, classifier trained) | 63% | Baseline |
+| **MP_2** | EfficientNet-B0 (Full Fine-Tuning across all layers) | 73% | Improved Baseline |
+| **MP_2_H** | **Hybrid CNN–Transformer** (EfficientNet-B0 + Transformer Encoder) | **79%** | **Current Production Model** |
 
-These models can be directly loaded for inference or deployment without retraining.
+### Supported Diagnostic Classes
 
---
-
-The project also includes a **Stage 1 Skin/Non-Skin Image Classifier** that acts as an input validation layer before the main disease classification model.
+| Model Code | Diagnostic Class Name | Canonical `class_key` | Clinical Urgency Level |
+|:---:|---|---|:---:|
+| `nv` | Melanocytic Nevus | `melanocytic_nevus` | Routine |
+| `mel` | Melanoma | `melanoma` | Urgent |
+| `bkl` | Benign Keratosis | `benign_keratosis` | Routine |
+| `bcc` | Basal Cell Carcinoma | `basal_cell_carcinoma` | Prompt |
+| `akiec` | Actinic Keratoses | `actinic_keratoses` | Prompt |
+| `vasc` | Vascular Lesion | `vascular_lesion` | Routine |
+| `df` | Dermatofibroma | `dermatofibroma` | Routine |
 
 ---
 
-## 📌 Project Overview
-
-Skin diseases can exhibit visually similar characteristics, making accurate classification challenging.
-
-This project aims to develop an automated image-based skin disease classification system using deep learning.
-
-The system follows a two-stage prediction pipeline:
+## 🏗️ System Architecture & Data Flow
 
 ```text
-                Input Image
-                     │
-                     ▼
-        ┌─────────────────────────┐
-        │       Stage 1           │
-        │ Skin / Non-Skin         │
-        │    Classifier           │
-        └────────────┬────────────┘
-                     │
-             ┌───────┴────────┐
-             │                │
-          Non-Skin           Skin
-             │                │
-             ▼                ▼
-        Reject Image     ┌───────────────┐
-                         │    Stage 2    │
-                         │ Hybrid CNN +  │
-                         │  Transformer  │
-                         └───────┬───────┘
-                                 │
-                                 ▼
-                       Skin Disease Class
-                                 │
-                                 ▼
-                       Confidence Score
-                                 │
-                                 ▼
-                         Supabase Storage
-                         + Prediction DB
-
-The final project status is present in "Major_Project_2"
-
-🚧 Current Project Status
-Completed
- Skin disease classification project architecture
- Dataset preparation
- Hybrid CNN–Transformer model development
- Stage 3 disease classification model
- Stage 1 skin/non-skin classifier
- Stage 1 MobileNetV2 training
- Stage 1 evaluation
- Stage 2 skin and lesion skin classifier
- FastAPI backend
- Image upload API
- Image validation
- Two-stage prediction pipeline
- Pydantic prediction response schema
- Supabase integration
- Image storage
- Prediction storage
- React + Vite frontend
- Frontend-backend API communication
- Docker containerization
- Google Artifact Registry setup
- Google Cloud Run deployment
- Google Secret Manager integration
- Vercel frontend deployment
- Local FastAPI testing
- Production API deployment
+                                    Uploaded Image
+                                          │
+                                          ▼
+                               ┌─────────────────────┐
+                               │  Image Validation   │ (OpenCV: Blur, Brightness, Resolution)
+                               └──────────┬──────────┘
+                                          │ Passed
+                                          ▼
+                               ┌─────────────────────┐
+                               │       Stage 1       │
+                               │   Skin / Non-Skin   │ (MobileNetV2)
+                               └──────────┬──────────┘
+                                          │
+                        ┌─────────────────┴─────────────────┐
+                        │ Is Skin                           │ Non-Skin
+                        ▼                                   ▼
+             ┌─────────────────────┐                   Reject Image
+             │       Stage 2       │
+             │ Normal vs. Lesion   │ (EfficientNetB0)
+             └──────────┬──────────┘
+                        │
+         ┌──────────────┴──────────────┐
+         │ Lesion-Affected Skin        │ Normal Skin
+         ▼                             ▼
+┌──────────────────┐          Return Normal Skin Notice
+│     Stage 3      │
+│ Hybrid CNN +     │ (EfficientNet-B0 + Transformer Encoder)
+│ Transformer      │
+└────────┬─────────┘
+         │
+         ├─────────────────────────────────────────┐
+         ▼                                         ▼
+┌─────────────────────────┐               ┌─────────────────────────┐
+│     Backend Services    │               │  Web Result Page (UI)   │
+├─────────────────────────┤               ├─────────────────────────┤
+│ • Supabase Storage      │               │ • Diagnostic Result     │
+│ • Database Persistence  │               │ • Confidence Progress   │
+│ • PDF Report Generation │               │ • Download PDF Button   │
+│ • Audit Log Recording   │               │ • Dynamic Educational   │
+└─────────────────────────┘               │   Guide (<SkinCondition-│
+                                          │   Guide />)             │
+                                          └─────────────────────────┘
+```
 
 ---
 
-## 🌐 Deploying to GitHub & Vercel
+## 📁 Repository Directory Structure
 
-### Step 1: Push Project to GitHub
-```bash
-git init
-git add .
-git commit -m "Initial commit - DermoAI Full Stack"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/dermoAI.git
-git push -u origin main
+```text
+dermoAI/
+├── .gitignore                     # Git ignore rules for node, python, logs, and .env
+├── README.md                      # Comprehensive project documentation
+├── vercel.json                    # Vercel deployment routing configuration
+│
+├── supabase/
+│   └── migrations/                # Version-controlled Supabase SQL migrations
+│       ├── 20261019_auth_rbac_privacy.sql
+│       ├── 20261020_two_role_system.sql
+│       └── 20261021_skin_condition_guides.sql # Guides table, RLS, & seed data
+│
+├── backend/                       # FastAPI Python Backend
+│   ├── api/
+│   │   ├── ml/                    # Inference pipeline, labels, & hybrid model architecture
+│   │   ├── routers/               # Endpoints: predict, reports, history, admin, guides
+│   │   ├── schemas/               # Pydantic schemas (prediction, history, guide)
+│   │   ├── services/              # Prediction, storage, report, audit, & guide services
+│   │   ├── auth.py                # Supabase JWT authentication & RBAC dependency
+│   │   ├── config.py              # Environment configuration & constants
+│   │   ├── logger.py              # Centralized logging configuration
+│   │   ├── main.py                # FastAPI entry point & CORS configuration
+│   │   └── supabase_client.py     # Server-side Supabase client initialization
+│   ├── trained_models/            # Model weights (hybrid_best.pth, etc.)
+│   ├── uploads/                   # Temporary upload processing folder
+│   ├── .env.example               # Backend environment variables template
+│   ├── Database_Table_Code.sql    # Full SQL script for Supabase SQL Editor
+│   ├── test_educational_guides.py# Automated unit test suite
+│   ├── requirements.txt           # Python backend dependencies
+│   ├── Dockerfile                 # Container image specification
+│   ├── Backend_README.md          # Quickstart backend guide
+│   └── README.md                  # Detailed backend technical guide
+│
+└── frontend/                      # React 19 + TypeScript + Vite Frontend
+    ├── src/
+    │   ├── components/            # UI components (SkinConditionGuide, LevitatingCard, etc.)
+    │   ├── context/               # AuthContext (user session & role management)
+    │   ├── lib/                   # Supabase client & utility functions
+    │   ├── pages/                 # Login, Dashboard, Predict, History, AdminDashboard
+    │   ├── services/              # api.ts (centralized fetch layer & guide retriever)
+    │   ├── utils/                 # classMapping.ts (model code to class_key mapper)
+    │   ├── App.tsx                # Client routing & ProtectedRoute guards
+    │   └── main.tsx               # Application root
+    ├── .env.example               # Frontend environment variables template
+    ├── package.json               # Node dependencies & npm scripts
+    ├── tailwind.config.js         # Tailwind theme & color configurations
+    ├── vite.config.ts             # Vite build settings & path aliases (@/)
+    ├── Frontend_README.md         # Quickstart frontend guide
+    └── README.md                  # Step-by-step frontend integration guide
 ```
 
-### Step 2: Deploy Backend (Render / Railway)
-1. Go to [render.com](https://render.com) → **New Web Service** → Connect `dermoAI` repo.
-2. Root Directory: `backend` | Build Command: `pip install -r requirements.txt` | Start Command: `uvicorn api.main:app --host 0.0.0.0 --port $PORT`
-3. Copy your live backend URL (e.g. `https://dermoai-backend.onrender.com`).
+---
 
-### Step 3: Deploy Frontend to Vercel
-1. Go to [vercel.com](https://vercel.com) → **New Project** → Import `dermoAI` repo.
-2. Select Root Directory: `frontend` (or leave root with preset `Vite`).
-3. Add Environment Variable:
-   - `VITE_API_URL` = `https://dermoai-backend.onrender.com`
-4. Click **Deploy**!
+## ⚡ Quick Start & Local Setup
+
+### Prerequisites
+- Python 3.10+ (Recommended: Python 3.11 / 3.12)
+- Node.js 18+ & npm 9+
+- A free [Supabase](https://supabase.com) account (or existing Supabase project)
+
+---
+
+### Step 1: Database Migration (Supabase)
+
+1. Open your **Supabase Dashboard** -> **SQL Editor**.
+2. Run the migrations in sequence from `supabase/migrations/`:
+   - `20261019_auth_rbac_privacy.sql`
+   - `20261020_two_role_system.sql`
+   - `20261021_skin_condition_guides.sql`
+   *(Alternatively, run the consolidated script in `backend/Database_Table_Code.sql`).*
+
+---
+
+### Step 2: Configure Environment Files
+
+#### Backend:
+In `backend/`, copy `.env.example` to `.env`:
+```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_KEY=your_supabase_service_role_key
+VITE_API_URL=http://localhost:8000
+```
+
+#### Frontend:
+In `frontend/`, copy `.env.example` to `.env`:
+```env
+VITE_API_URL=http://localhost:8000
+VITE_SUPABASE_URL=https://your-project.supabase.co
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+---
+
+### Step 3: Run Backend Server
+
+```powershell
+cd backend
+
+# Create and activate virtual environment
+python -m venv .venv
+.\.venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start FastAPI server
+python -m uvicorn api.main:app --reload --port 8000
+```
+
+- API Base: `http://localhost:8000`
+- Interactive OpenAPI Docs: `http://localhost:8000/docs`
+- Health Endpoint: `http://localhost:8000/health`
+
+---
+
+### Step 4: Run Frontend Client
+
+Open a new terminal:
+
+```powershell
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start Vite development server
+npm run dev
+```
+
+- Web Client: `http://localhost:5173`
+
+---
+
+## 🧪 Testing and Verification
+
+Run the automated test suite to verify endpoints, class mappings, and report safety:
+
+```powershell
+cd backend
+python -m unittest test_educational_guides.py
+```
+
+Run frontend linting and build validation:
+
+```powershell
+cd frontend
+npm run lint
+npx vite build
+```
+
+---
+
+## ⚠️ Medical Safety & Regulatory Disclaimer
+
+DERMO-AI is designed as an **educational, research, and preliminary screening assistance tool**. 
+
+1. **Non-Diagnostic**: Predictions generated by DERMO-AI represent statistical pattern recognitions and **do not constitute a confirmed medical diagnosis**.
+2. **Clinical Evaluation Mandatory**: No skin lesion can be confirmed benign or malignant without an in-person clinical examination by a qualified dermatologist and, when indicated, a histopathological biopsy.
+3. **No Prescriptions**: DERMO-AI does not prescribe medications, dosages, or personalized treatment regimens.
+4. **Emergency Guidance**: Suspected high-risk lesions (such as Melanoma) must be evaluated promptly by a medical specialist.

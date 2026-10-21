@@ -1,18 +1,20 @@
 import os
 import cv2
+from typing import Optional
 from api.logger import logger
 from fastapi import HTTPException
 from api.ml.inference import predict
 from api.supabase_client import supabase
 from PIL import Image, UnidentifiedImageError
-from api.services.storage_service import upload_image
+from api.services.storage_service import upload_image, upload_private_image
 from api.services.stage1_classifier import classify_skin
 from api.services.report_service import generate_and_store_report
 from api.services.skin_lesion_classifier import classify_skin_lesion
+from api.services.audit_service import log_audit_event
 
 
-def predict_image(image_path:str,filename:str):
-    logger.info(f"Starting prediction for {filename}")
+def predict_image(image_path: str, filename: str, user_id: Optional[str] = None):
+    logger.info(f"Starting prediction for {filename} (user_id: {user_id})")
     warnings=[]
 
     #Image Validation
@@ -204,25 +206,46 @@ def predict_image(image_path:str,filename:str):
 
         #Upload image
 
-        # Upload the scan image
+        # Upload the scan image (private user path if user_id present)
         logger.info("Uploading image to Supabase Storage...")
 
-        image_url = upload_image(image_path, filename)
+        storage_path = None
+        if user_id:
+            storage_path, image_url = upload_private_image(image_path, filename, user_id)
+        else:
+            image_url = upload_image(image_path, filename)
+            storage_path = filename
 
         # Save the prediction and retrieve its database ID
         logger.info("Saving prediction to database...")
 
-        prediction_response = (
-            supabase.table("predictions")
-            .insert({
-                "filename": filename,
-                "image_url": image_url,
-                "prediction": result["prediction"],
-                "code": result["code"],
-                "confidence": result["confidence"],
-            })
-            .execute()
-        )
+        insert_payload = {
+            "filename": filename,
+            "image_url": image_url,
+            "prediction": result["prediction"],
+            "code": result["code"],
+            "confidence": result["confidence"],
+        }
+        if user_id:
+            insert_payload["user_id"] = user_id
+        if storage_path:
+            insert_payload["image_storage_path"] = storage_path
+
+        try:
+            prediction_response = supabase.table("predictions").insert(insert_payload).execute()
+        except Exception as insert_err:
+            logger.warning(f"Could not insert with extended fields, retrying baseline: {insert_err}")
+            prediction_response = (
+                supabase.table("predictions")
+                .insert({
+                    "filename": filename,
+                    "image_url": image_url,
+                    "prediction": result["prediction"],
+                    "code": result["code"],
+                    "confidence": result["confidence"],
+                })
+                .execute()
+            )
 
         if not prediction_response.data:
             raise RuntimeError("Prediction record was not saved.")
@@ -231,30 +254,43 @@ def predict_image(image_path:str,filename:str):
 
         logger.info("Prediction saved with ID: %s", prediction_id)
 
+        # Record audit log
+        log_audit_event(
+            actor_id=user_id,
+            action="prediction_created",
+            target_id=str(prediction_id),
+            details={"disease": result["prediction"], "confidence": result["confidence"]},
+        )
+
         # Generate and store the PDF report
         logger.info("Generating PDF report...")
 
-        report = generate_and_store_report(
-            prediction_id=prediction_id,
-            filename=filename,
-            image_path=image_path,
-            image_url=image_url,
-            prediction=result["prediction"],
-            code=result["code"],
-            confidence=float(result["confidence"]),
-            normal_skin_probability=normal_probability,
-            lesion_skin_probability=lesion_probability,
-            warnings=warnings,
-        )
-
-        logger.info(
-            "PDF report generated: %s",
-            report["report_number"],
-        )
+        report = None
+        try:
+            report = generate_and_store_report(
+                prediction_id=prediction_id,
+                filename=filename,
+                image_path=image_path,
+                image_url=image_url,
+                prediction=result["prediction"],
+                code=result["code"],
+                confidence=float(result["confidence"]),
+                normal_skin_probability=normal_probability,
+                lesion_skin_probability=lesion_probability,
+                warnings=warnings,
+                user_id=user_id,
+            )
+            logger.info(
+                "PDF report generated: %s",
+                report["report_number"],
+            )
+        except Exception as report_err:
+            logger.warning("Could not generate or store PDF report: %s", report_err)
+            warnings.append("⚠️ PDF report generation was unavailable for this screening.")
 
         return {
             "success": True,
-            "message": "Prediction and report generated successfully.",
+            "message": "Prediction completed successfully.",
             "filename": filename,
             "stage": 3,
             "result": {
@@ -265,10 +301,10 @@ def predict_image(image_path:str,filename:str):
                 "normal_skin_probability": normal_probability,
                 "lesion_skin_probability": lesion_probability,
                 "prediction_id": prediction_id,
-                "report_id": report["report_id"],
-                "report_number": report["report_number"],
+                "report_id": report["report_id"] if report else None,
+                "report_number": report["report_number"] if report else None,
                 "report_download_url": (
-                    f"/reports/{report['report_id']}/download"
+                    f"/reports/{report['report_id']}/download" if report else None
                 ),
             },
             "warnings": warnings,
