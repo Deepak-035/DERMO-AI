@@ -6,45 +6,51 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ['"Fraunces"', 'Georgia', 'serif'],
+        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      fontSize: {
+        'hero': 'clamp(3rem, 8vw, 7.5rem)',
+        'h2': 'clamp(2rem, 4vw, 3.5rem)',
+        'body': ['1.0625rem', { lineHeight: '1.65' }],
+        'label': ['0.75rem', { lineHeight: '1', letterSpacing: '0.05em' }],
+      },
+      letterSpacing: {
+        'display': '-0.035em',
+        'tight-display': '-0.045em',
+      },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-        popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
-        },
-        card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
-        },
+        bg: 'var(--bg)',
+        surface: 'var(--surface)',
+        text: 'var(--text)',
+        muted: 'var(--muted)',
+        border: 'var(--border)',
+        accent: 'var(--accent)',
+        'accent-ink': 'var(--accent-ink)',
+        'accent-tint': 'var(--accent-tint)',
+        destructive: 'var(--destructive)',
+        success: 'var(--success)',
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        DEFAULT: '2px',
+        sm: '1px',
+        md: '2px',
+        lg: '2px',
+      },
+      boxShadow: {
+        'hard': '6px 6px 0 var(--text)',
+        'hard-sm': '3px 3px 0 var(--text)',
+        'hard-accent': '6px 6px 0 var(--accent)',
+        'hard-accent-sm': '3px 3px 0 var(--accent)',
+      },
+      gridTemplateColumns: {
+        'editorial': 'repeat(12, 1fr)',
+      },
+      spacing: {
+        '18': '4.5rem',
+        '22': '5.5rem',
       },
     },
   },

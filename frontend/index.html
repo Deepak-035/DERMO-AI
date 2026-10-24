@@ -2,12 +2,57 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+
+    <!-- SEO -->
+    <title>DermoAI: Skin photo screening support</title>
+    <meta name="description" content="Upload a clear photo of a mole, rash or lesion. DermoAI scores it for features dermatologists look for, and gives you a report to bring to your appointment." />
+    <meta property="og:title" content="DermoAI — Skin photo screening support" />
+    <meta property="og:description" content="AI-assisted skin lesion classification. A screening aid, not a diagnosis." />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#F8FAFC" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0B0F17" media="(prefers-color-scheme: dark)" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+    <!-- Font preconnects -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Fonts: Fraunces (display serif), Inter (body), JetBrains Mono (data/labels) -->
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400;1,9..144,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- FOUC prevention: apply theme before first paint -->
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('dermoai-theme');
+          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var theme = stored || (prefersDark ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch(e) {}
+      })();
+    </script>
+
+    <!-- Disable transitions on initial load -->
+    <style>
+      html:not([data-loaded]) * {
+        transition: none !important;
+      }
+    </style>
   </head>
   <body>
+    <a href="#content" class="skip-to-content">Skip to content</a>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.addEventListener('DOMContentLoaded', function() {
+        requestAnimationFrame(function() {
+          document.documentElement.setAttribute('data-loaded', '');
+        });
+      });
+    </script>
   </body>
 </html>

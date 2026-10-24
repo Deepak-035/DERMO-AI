@@ -1,18 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FloatingNav } from '@/components/FloatingNav';
-import { BackgroundVideo } from '@/components/BackgroundVideo';
-import { LevitatingCard } from '@/components/LevitatingCard';
+import { Footer } from '@/components/Footer';
 import { useAuth } from '@/context/AuthContext';
 import { checkHealth } from '@/services/api';
 import {
-  BrainCircuit,
   Activity,
-  CheckCircle2,
-  AlertTriangle,
+  ArrowRight,
   ShieldCheck,
+  Cpu,
+  FileText,
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -24,98 +22,145 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen relative overflow-hidden pt-24 px-4 pb-12 bg-slate-950">
-      <BackgroundVideo />
+    <div className="min-h-screen flex flex-col bg-bg text-text">
       <FloatingNav />
 
-      <main className="max-w-6xl mx-auto mt-8 space-y-12">
-        {/* Welcome & ML Hero Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <motion.div
-            animate={{ y: [0, -10, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
-            className="space-y-6"
-          >
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-xs backdrop-blur-md">
-              {isBackendHealthy === null ? (
-                <span className="w-2 h-2 rounded-full bg-yellow-400 animate-ping" />
-              ) : isBackendHealthy ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-              ) : (
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
-              )}
-              <span className="text-slate-300">
-                {isBackendHealthy === null
-                  ? 'Checking ML API connection...'
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
+        {/* Status bar */}
+        <div className="flex items-center justify-between pb-6 border-b border-border mb-10">
+          <div className="flex items-center gap-2">
+            <span
+              className={`inline-block w-2.5 h-2.5 rounded-full ${
+                isBackendHealthy === null
+                  ? 'bg-amber-400 animate-pulse'
                   : isBackendHealthy
-                  ? 'FastAPI Backend Online & Ready'
-                  : 'Backend Disconnected (Run python backend)'}
-              </span>
-            </div>
+                  ? 'bg-emerald-500'
+                  : 'bg-rose-500'
+              }`}
+            />
+            <span className="font-mono text-xs tracking-wider uppercase text-muted">
+              {isBackendHealthy === null
+                ? 'Connecting to ML Pipeline…'
+                : isBackendHealthy
+                ? 'Inference Engine Active · FastAPI 8000'
+                : 'Inference Engine Offline'}
+            </span>
+          </div>
 
-            <h1 className="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 leading-tight">
-              Clinical Skin Disease Classification
+          <div className="font-mono text-xs text-muted">
+            SESSION: <span className="text-text font-medium">{profile?.email || 'Authenticated User'}</span>
+          </div>
+        </div>
+
+        {/* Hero Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mb-16">
+          <div className="lg:col-span-8 space-y-6">
+            <span className="section-label">Diagnostic Screening Interface</span>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-serif tracking-tight text-text leading-tight">
+              Clinical skin lesion classification & audit records.
             </h1>
-
-            <p className="text-base text-slate-300 leading-relaxed bg-black/40 p-5 rounded-2xl border border-white/10 backdrop-blur-md">
-              Welcome back, <strong className="text-cyan-300">{profile?.full_name || 'User'}</strong>.
-              DERMO-AI combines local feature extraction with global attention mechanisms to deliver precise dermatological screening with end-to-end patient privacy.
+            <p className="text-lg text-muted max-w-2xl leading-relaxed">
+              Welcome, <strong className="text-text font-semibold">{profile?.full_name || 'Clinician'}</strong>. 
+              DERMO-AI utilizes a hybrid convolutional and vision transformer pipeline to provide assisted dermatological 
+              differential screening, private diagnostic archives, and patient-ready reporting.
             </p>
 
             <div className="pt-2 flex flex-wrap items-center gap-4">
               <button
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold text-sm transition-all shadow-lg shadow-cyan-500/20"
+                type="button"
                 onClick={() => navigate('/predict')}
+                className="btn-primary"
               >
-                Analyze Skin Image
+                <span>Upload New Scan</span>
+                <ArrowRight className="w-4 h-4" />
               </button>
               <button
-                className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-all border border-white/15"
+                type="button"
                 onClick={() => navigate('/history')}
+                className="btn-secondary"
               >
-                View My History
+                <span>Review History</span>
               </button>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Info Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <LevitatingCard hoverEffect className="col-span-1 sm:col-span-2">
-              <div className="flex items-start gap-4 pb-1">
-                <div className="p-3 bg-cyan-500/20 rounded-xl text-cyan-400">
-                  <BrainCircuit className="w-7 h-7" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-1">Hybrid Feature Fusion</h3>
-                  <p className="text-slate-400 text-xs leading-relaxed">
-                    Combining CNN spatial hierarchies with Vision Transformer attention for multi-class skin lesion recognition.
-                  </p>
-                </div>
-              </div>
-            </LevitatingCard>
+          {/* Quick Metrics / Status Card */}
+          <div className="lg:col-span-4 border border-border p-6 bg-surface rounded-sm space-y-5">
+            <div className="border-b border-border pb-3">
+              <span className="section-label">System Specification</span>
+            </div>
 
-            <LevitatingCard hoverEffect>
-              <div className="flex flex-col items-center text-center gap-2 pb-1">
-                <div className="p-2.5 bg-blue-500/20 rounded-full text-blue-400">
-                  <Activity className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-sm text-white">Private Storage</h3>
-                <p className="text-slate-400 text-xs">Patient images & PDFs isolated under user-scoped UUID paths.</p>
+            <div className="space-y-4 text-sm">
+              <div className="flex items-start justify-between">
+                <span className="text-muted">Core Model</span>
+                <span className="font-mono text-xs font-semibold text-text text-right">
+                  CNN + ViT Hybrid
+                </span>
               </div>
-            </LevitatingCard>
+              <div className="flex items-start justify-between">
+                <span className="text-muted">Target Resolution</span>
+                <span className="font-mono text-xs font-semibold text-text">
+                  224 × 224 RGB
+                </span>
+              </div>
+              <div className="flex items-start justify-between">
+                <span className="text-muted">Patient Storage</span>
+                <span className="font-mono text-xs font-semibold text-text">
+                  Isolated UUID RLS
+                </span>
+              </div>
+              <div className="flex items-start justify-between">
+                <span className="text-muted">Report Engine</span>
+                <span className="font-mono text-xs font-semibold text-text">
+                  ReportLab Vector PDF
+                </span>
+              </div>
+            </div>
 
-            <LevitatingCard hoverEffect>
-              <div className="flex flex-col items-center text-center gap-2 pb-1">
-                <div className="p-2.5 bg-emerald-500/20 rounded-full text-emerald-400">
-                  <ShieldCheck className="w-5 h-5" />
-                </div>
-                <h3 className="font-bold text-sm text-white">Secure by Design</h3>
-                <p className="text-slate-400 text-xs">Row Level Security enforces data isolation per authenticated user.</p>
+            <div className="pt-4 border-t border-border">
+              <div className="flex items-center gap-2 text-xs text-muted">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                <span>Zero telemetry transmission outside private enclave.</span>
               </div>
-            </LevitatingCard>
+            </div>
+          </div>
+        </div>
+
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8 border-t border-border">
+          <div className="p-6 border border-border bg-surface rounded-sm hover:border-accent transition-colors">
+            <div className="w-10 h-10 flex items-center justify-center border border-border rounded-sm mb-4 bg-bg">
+              <Cpu className="w-5 h-5 text-accent" />
+            </div>
+            <h3 className="text-lg font-serif mb-2">Dual-Stream Extraction</h3>
+            <p className="text-sm text-muted leading-relaxed">
+              High-frequency convolutional feature maps retain fine lesion boundary detail, while multi-head self-attention models macro-level context.
+            </p>
+          </div>
+
+          <div className="p-6 border border-border bg-surface rounded-sm hover:border-accent transition-colors">
+            <div className="w-10 h-10 flex items-center justify-center border border-border rounded-sm mb-4 bg-bg">
+              <Activity className="w-5 h-5 text-accent" />
+            </div>
+            <h3 className="text-lg font-serif mb-2">Confidence Calibration</h3>
+            <p className="text-sm text-muted leading-relaxed">
+              Every inference provides probability scores, clinical warnings for ambiguous borders, and contextual condition guides for verified classes.
+            </p>
+          </div>
+
+          <div className="p-6 border border-border bg-surface rounded-sm hover:border-accent transition-colors">
+            <div className="w-10 h-10 flex items-center justify-center border border-border rounded-sm mb-4 bg-bg">
+              <FileText className="w-5 h-5 text-accent" />
+            </div>
+            <h3 className="text-lg font-serif mb-2">Clinical Export & PDF</h3>
+            <p className="text-sm text-muted leading-relaxed">
+              Generate structured screening summary documents with patient identifier, model telemetry, and educational consultation guidelines.
+            </p>
           </div>
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }

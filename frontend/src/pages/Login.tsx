@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, AlertCircle, CheckCircle2, ShieldCheck, Mail, Lock, User as UserIcon } from 'lucide-react';
+import { Loader2, AlertCircle, CheckCircle2, Mail, Lock, User as UserIcon } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -116,292 +115,288 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-end pr-8 sm:pr-16 md:pr-24 lg:pr-32 relative overflow-hidden bg-slate-950">
-      {/* Background Video */}
-      <video
-        className="object-cover w-full h-full fixed top-0 left-0"
-        style={{ zIndex: 0 }}
-        autoPlay
-        loop
-        muted
-        playsInline
-      >
-        <source
-          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260405_171521_25968ba2-b594-4b32-aab7-f6b69398a6fa.mp4"
-          type="video/mp4"
-        />
-      </video>
+    <div className="min-h-screen bg-bg flex">
+      {/* Left side — editorial text */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between p-12 xl:p-16 border-r border-border relative">
+        {/* Logo */}
+        <div className="flex items-center gap-2">
+          <svg viewBox="0 0 32 32" width="28" height="28" fill="none" aria-hidden="true">
+            <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="1.5" className="text-text" />
+            <circle cx="20" cy="12" r="3" fill="currentColor" className="text-accent" />
+          </svg>
+          <span className="text-base tracking-tight">
+            <span className="font-display font-bold text-text">Dermo</span>
+            <span className="font-mono font-bold text-accent">AI</span>
+          </span>
+        </div>
 
-      {/* Dark overlay */}
-      <div className="fixed top-0 left-0 w-full h-full bg-black/65" style={{ zIndex: 1 }} />
-
-      {/* Glassmorphism Authentication Card */}
-      <motion.div
-        animate={{ y: [0, -6, 0] }}
-        transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-        className="w-full max-w-md p-8 rounded-2xl relative shadow-2xl"
-        style={{
-          zIndex: 2,
-          background: 'rgba(15, 23, 42, 0.85)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          boxShadow: '0 25px 50px -12px rgba(6, 182, 212, 0.35), 0 0 40px rgba(6, 182, 212, 0.15)',
-        }}
-      >
-        {/* Brand Header */}
-        <div className="text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center mx-auto mb-3 shadow-lg shadow-cyan-500/50">
-            <span className="text-white font-extrabold text-2xl">D</span>
-          </div>
-          <h1 className="text-2xl font-extrabold text-white tracking-tight">DERMO-AI</h1>
-          <p className="text-cyan-400 text-xs font-medium tracking-wide uppercase mt-1">
-            Clinical Skin Lesion Classification
+        {/* Hero text */}
+        <div className="max-w-lg">
+          <h1 className="font-display text-[clamp(2.5rem,5vw,4.5rem)] font-bold leading-[0.95] tracking-display text-text mb-6">
+            A second look at your skin.
+          </h1>
+          <p className="text-body text-muted max-w-md mb-8">
+            Upload a clear photo of a mole, rash or lesion. DermoAI scores it for features dermatologists look for, and gives you a report to bring to your appointment.
+          </p>
+          <p className="font-mono text-xs text-muted border-l-2 border-accent pl-4">
+            A screening aid. Not a diagnosis.<br />
+            Always confirm with a dermatologist.
           </p>
         </div>
 
-        {/* Auth Mode Tabs (Only Login and Sign Up) */}
-        {tab !== 'forgot' && (
-          <div className="flex p-1 mb-5 rounded-xl bg-slate-900/90 border border-white/10">
-            <button
-              type="button"
-              onClick={() => {
-                setTab('login');
-                setError(null);
-              }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                tab === 'login'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setTab('signup');
-                setError(null);
-              }}
-              className={`flex-1 py-2 text-xs font-bold rounded-lg transition-all ${
-                tab === 'signup'
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
-            >
-              Sign Up
-            </button>
-          </div>
-        )}
+        {/* Bottom lavender accent block */}
+        <div className="bg-accent-tint border border-border p-6 max-w-sm">
+          <p className="section-label mb-2">How it works</p>
+          <ol className="space-y-2 text-sm text-muted">
+            <li className="flex gap-3 items-start">
+              <span className="font-mono font-bold text-accent text-lg leading-none">01</span>
+              <span>Upload a clear, well-lit photo of the area</span>
+            </li>
+            <li className="flex gap-3 items-start">
+              <span className="font-mono font-bold text-accent text-lg leading-none">02</span>
+              <span>Our model scores it against 7 known conditions</span>
+            </li>
+            <li className="flex gap-3 items-start">
+              <span className="font-mono font-bold text-accent text-lg leading-none">03</span>
+              <span>Download a PDF report to share with your doctor</span>
+            </li>
+          </ol>
+        </div>
+      </div>
 
-        {/* Notifications */}
-        <AnimatePresence mode="wait">
+      {/* Right side — form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 lg:px-12">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="lg:hidden mb-8 flex items-center gap-2">
+            <svg viewBox="0 0 32 32" width="28" height="28" fill="none" aria-hidden="true">
+              <circle cx="16" cy="16" r="14" stroke="currentColor" strokeWidth="1.5" className="text-text" />
+              <circle cx="20" cy="12" r="3" fill="currentColor" className="text-accent" />
+            </svg>
+            <span className="text-lg tracking-tight">
+              <span className="font-display font-bold text-text">Dermo</span>
+              <span className="font-mono font-bold text-accent">AI</span>
+            </span>
+          </div>
+
+          {/* Page heading */}
+          <h2 className="font-display text-h2 font-bold tracking-display text-text mb-2">
+            {tab === 'login' ? 'Sign in' : tab === 'signup' ? 'Create account' : 'Reset password'}
+          </h2>
+          <p className="text-sm text-muted mb-8">
+            {tab === 'login'
+              ? 'Welcome back. Enter your credentials below.'
+              : tab === 'signup'
+              ? 'Get started with DermoAI in seconds.'
+              : 'We\'ll send a recovery link to your email.'}
+          </p>
+
+          {/* Auth Mode Tabs (Only Login and Sign Up) */}
+          {tab !== 'forgot' && (
+            <div className="flex border-b border-border mb-6">
+              <button
+                type="button"
+                onClick={() => { setTab('login'); setError(null); }}
+                className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                  tab === 'login'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-muted hover:text-text'
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => { setTab('signup'); setError(null); }}
+                className={`py-2 px-4 text-sm font-medium border-b-2 transition-colors ${
+                  tab === 'signup'
+                    ? 'border-accent text-accent'
+                    : 'border-transparent text-muted hover:text-text'
+                }`}
+              >
+                Sign Up
+              </button>
+            </div>
+          )}
+
+          {/* Notifications */}
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="mb-4 p-3 rounded-xl bg-red-500/20 border border-red-500/40 flex items-start gap-2.5 text-red-200 text-xs font-medium"
-            >
-              <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400 mt-0.5" />
+            <div className="alert alert-error mb-4 text-sm">
+              <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{error}</span>
-            </motion.div>
+            </div>
           )}
 
           {success && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              className="mb-4 p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-start gap-2.5 text-emerald-200 text-xs font-medium"
-            >
-              <CheckCircle2 className="w-4 h-4 flex-shrink-0 text-emerald-400 mt-0.5" />
+            <div className="alert alert-success mb-4 text-sm">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5" />
               <span>{success}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* LOGIN FORM */}
-        {tab === 'login' && (
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-                />
-              </div>
             </div>
+          )}
 
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-semibold text-slate-300">Password</label>
+          {/* LOGIN FORM */}
+          {tab === 'login' && (
+            <form onSubmit={handleLogin} className="space-y-5">
+              <div>
+                <label className="section-label block mb-2">Email Address</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-muted absolute left-3 top-3.5" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="section-label">Password</label>
+                  <button
+                    type="button"
+                    onClick={() => { setTab('forgot'); setError(null); setSuccess(null); }}
+                    className="text-xs text-accent hover:underline"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-muted absolute left-3 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input pl-10"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Verifying…</span>
+                  </>
+                ) : (
+                  <span>Sign In</span>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* SIGN UP FORM */}
+          {tab === 'signup' && (
+            <form onSubmit={handleSignUp} className="space-y-5">
+              <div>
+                <label className="section-label block mb-2">Full Name</label>
+                <div className="relative">
+                  <UserIcon className="w-4 h-4 text-muted absolute left-3 top-3.5" />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Your Name"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="input pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="section-label block mb-2">Email Address</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-muted absolute left-3 top-3.5" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input pl-10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="section-label block mb-2">Password</label>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-muted absolute left-3 top-3.5" />
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    placeholder="At least 6 characters"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="input pl-10"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="btn-primary w-full mt-2">
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Creating Account…</span>
+                  </>
+                ) : (
+                  <span>Register Account</span>
+                )}
+              </button>
+            </form>
+          )}
+
+          {/* FORGOT PASSWORD FORM */}
+          {tab === 'forgot' && (
+            <form onSubmit={handlePasswordReset} className="space-y-5">
+              <p className="text-sm text-muted">
+                Enter the email address registered with your account and we will send you a password recovery link.
+              </p>
+
+              <div>
+                <label className="section-label block mb-2">Email Address</label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-muted absolute left-3 top-3.5" />
+                  <input
+                    type="email"
+                    required
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="input pl-10"
+                  />
+                </div>
+              </div>
+
+              <button type="submit" disabled={loading} className="btn-primary w-full">
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send Recovery Link</span>}
+              </button>
+
+              <div className="text-center">
                 <button
                   type="button"
-                  onClick={() => {
-                    setTab('forgot');
-                    setError(null);
-                    setSuccess(null);
-                  }}
-                  className="text-[11px] text-cyan-400 hover:text-cyan-300 transition-colors"
+                  onClick={() => { setTab('login'); setError(null); setSuccess(null); }}
+                  className="text-sm text-muted hover:text-accent transition-colors"
                 >
-                  Forgot password?
+                  ← Back to Sign In
                 </button>
               </div>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-                />
-              </div>
-            </div>
+            </form>
+          )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Verifying identity...</span>
-                </>
-              ) : (
-                <span>Sign In</span>
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* SIGN UP FORM (Always creates 'user' role) */}
-        {tab === 'signup' && (
-          <form onSubmit={handleSignUp} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Full Name</label>
-              <div className="relative">
-                <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="text"
-                  required
-                  placeholder="Your Name"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Password</label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="password"
-                  required
-                  minLength={6}
-                  placeholder="At least 6 characters"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold text-sm shadow-lg shadow-cyan-500/25 flex items-center justify-center gap-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Creating Account...</span>
-                </>
-              ) : (
-                <span>Register Account</span>
-              )}
-            </button>
-          </form>
-        )}
-
-        {/* FORGOT PASSWORD FORM */}
-        {tab === 'forgot' && (
-          <form onSubmit={handlePasswordReset} className="space-y-4">
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Enter the email address registered with your account and we will send you a password recovery link.
+          {/* Footer disclaimer */}
+          <div className="mt-8 pt-6 border-t border-border">
+            <p className="text-xs text-muted font-mono">
+              Your data is protected by row-level security. DermoAI does not share your images.
             </p>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
-                <input
-                  type="email"
-                  required
-                  placeholder="name@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-900/80 border border-white/10 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 transition-all"
-                />
-              </div>
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-sm shadow-md flex items-center justify-center gap-2 transition-all disabled:opacity-60"
-            >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <span>Send Recovery Link</span>}
-            </button>
-
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => {
-                  setTab('login');
-                  setError(null);
-                  setSuccess(null);
-                }}
-                className="text-xs text-slate-400 hover:text-white transition-colors"
-              >
-                ← Back to Sign In
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Footer Guarantee */}
-        <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-center gap-2 text-slate-400 text-[11px]">
-          <ShieldCheck className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-          <span>Protected by Supabase Row Level Security & RBAC</span>
+          </div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

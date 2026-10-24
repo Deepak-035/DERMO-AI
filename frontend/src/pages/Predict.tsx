@@ -1,10 +1,7 @@
 import React, { useState } from 'react';
 import { FloatingNav } from '@/components/FloatingNav';
-import { BackgroundVideo } from '@/components/BackgroundVideo';
-import { LevitatingCard } from '@/components/LevitatingCard';
-import { SecondaryButton } from '@/components/SecondaryButton';
-import { UploadCloud, Loader2, AlertCircle } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
+import { Footer } from '@/components/Footer';
+import { UploadCloud, Loader2, AlertCircle, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { predictImage, getImageUrl } from '@/services/api';
 import DownloadReportButton from '@/components/DownloadReportButton';
 import SkinConditionGuide from '@/components/SkinConditionGuide';
@@ -45,7 +42,7 @@ export default function Predict() {
   const handleFile = (selectedFile: File) => {
     setFile(selectedFile);
     setPreview(URL.createObjectURL(selectedFile));
-    setResult(null); // reset
+    setResult(null);
     setError(null);
   };
 
@@ -66,147 +63,232 @@ export default function Predict() {
           reportId: response.result.report_id,
           reportDownloadUrl: response.result.report_download_url,
         });
-
       } else {
         throw new Error(response.message || 'Prediction failed');
       }
     } catch (err: any) {
       console.error('Prediction error:', err);
-      setError(err.message || 'Failed to connect to backend server. Make sure FastAPI server is running.');
+      setError(
+        err.message || 'Failed to connect to backend inference server. Ensure FastAPI is running.'
+      );
     } finally {
       setIsAnalyzing(false);
     }
   };
 
+  const resetAnalysis = () => {
+    setFile(null);
+    setPreview(null);
+    setResult(null);
+    setError(null);
+  };
+
   return (
-    <div className="min-h-screen relative overflow-hidden pt-24 px-4 pb-12 flex flex-col items-center">
-      <BackgroundVideo />
+    <div className="min-h-screen flex flex-col bg-bg text-text">
       <FloatingNav />
 
-      <main className="w-full max-w-3xl mt-8">
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 sm:px-6 py-10 md:py-14">
+        {/* Page Header */}
+        <div className="border-b border-border pb-6 mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="section-label">Screening Protocol</span>
+              <h1 className="text-3xl sm:text-4xl font-serif text-text mt-1">
+                Skin Lesion Diagnostic Intake
+              </h1>
+            </div>
+            {result && (
+              <button
+                type="button"
+                onClick={resetAnalysis}
+                className="btn-secondary text-xs"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>New Specimen</span>
+              </button>
+            )}
+          </div>
+          <p className="text-sm text-muted mt-2 max-w-2xl">
+            Upload high-resolution dermatoscope photographs or macro clinical captures. 
+            All uploads are securely isolated and encrypted.
+          </p>
+        </div>
+
         {error && (
-          <div className="mb-6 p-4 rounded-xl bg-red-500/20 border border-red-500/50 flex items-center gap-3 text-red-200">
-            <AlertCircle className="w-6 h-6 flex-shrink-0 text-red-400" />
-            <p className="text-sm font-medium">{error}</p>
+          <div className="mb-6 p-4 rounded-sm bg-rose-500/10 border border-rose-500/30 flex items-start gap-3 text-rose-600 dark:text-rose-400">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <span className="font-semibold block">Screening Pipeline Error</span>
+              <p className="mt-0.5">{error}</p>
+            </div>
           </div>
         )}
 
         {!result ? (
-          <LevitatingCard className="p-8">
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">Analyze Skin Image</h2>
-            
-            <div 
+          <div className="border border-border bg-surface rounded-sm p-6 sm:p-10">
+            <div
               onDrop={handleDrop}
               onDragOver={handleDragOver}
-              className="border-2 border-dashed border-cyan-500/50 rounded-2xl p-12 flex flex-col items-center justify-center text-center hover:border-cyan-400 transition-colors bg-white/5 cursor-pointer relative"
+              className="border border-dashed border-border hover:border-accent p-8 sm:p-12 text-center transition-colors relative cursor-pointer bg-bg/50 rounded-sm"
             >
-              <input 
-                type="file" 
-                accept="image/png, image/jpeg, image/jpg" 
+              <input
+                type="file"
+                accept="image/png, image/jpeg, image/jpg"
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 onChange={handleFileChange}
               />
-              
+
               {preview ? (
-                <img src={preview} alt="Preview" className="max-h-64 rounded-lg object-contain mb-4 shadow-lg shadow-cyan-500/20" />
+                <div className="flex flex-col items-center">
+                  <div className="border border-border p-2 bg-surface rounded-sm mb-4">
+                    <img
+                      src={preview}
+                      alt="Intake Preview"
+                      className="max-h-72 object-contain rounded-sm"
+                    />
+                  </div>
+                  <span className="font-mono text-xs text-muted">
+                    {file?.name} ({(file!.size / 1024).toFixed(1)} KB)
+                  </span>
+                  <span className="text-xs text-accent mt-1 hover:underline">
+                    Click or drag new file to replace
+                  </span>
+                </div>
               ) : (
-                <UploadCloud className="w-16 h-16 text-cyan-400 mb-4 animate-pulse" />
-              )}
-              
-              {!preview && (
-                <>
-                  <p className="text-white font-medium mb-1">Drag and drop your image here</p>
-                  <p className="text-slate-400 text-sm">Supports PNG, JPG, JPEG up to 5MB</p>
-                </>
+                <div className="flex flex-col items-center">
+                  <div className="w-12 h-12 flex items-center justify-center border border-border rounded-sm bg-surface mb-4">
+                    <UploadCloud className="w-6 h-6 text-muted" />
+                  </div>
+                  <h3 className="text-base font-serif text-text mb-1">
+                    Select or drag clinical specimen
+                  </h3>
+                  <p className="text-xs text-muted mb-2">
+                    Accepts PNG, JPG, or JPEG images up to 5MB
+                  </p>
+                  <span className="font-mono text-[11px] text-muted tracking-wider uppercase">
+                    Resolution Recommendation: 500px+ Macro
+                  </span>
+                </div>
               )}
             </div>
 
-            <div className="mt-8 flex justify-center">
-              <SecondaryButton onClick={handleAnalyze} disabled={!file || isAnalyzing}>
+            <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
+              <span className="text-xs text-muted">
+                {file ? 'File loaded and ready for feature extraction' : 'No specimen loaded yet'}
+              </span>
+
+              <button
+                type="button"
+                onClick={handleAnalyze}
+                disabled={!file || isAnalyzing}
+                className="btn-primary w-full sm:w-auto"
+              >
                 {isAnalyzing ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Analyzing with Hybrid CNN-Transformer...
-                  </span>
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Executing CNN-ViT Model...</span>
+                  </>
                 ) : (
-                  "Analyze Image"
+                  <span>Run Diagnostic Inference</span>
                 )}
-              </SecondaryButton>
+              </button>
             </div>
-          </LevitatingCard>
+          </div>
         ) : (
-          <div className="space-y-6">
-            <LevitatingCard className="p-8 border-green-500/30">
-              <h2 className="text-2xl font-bold text-white mb-6 text-center">Analysis Result</h2>
-              <div className="grid md:grid-cols-2 gap-8 items-center">
-                <div className="flex justify-center">
-                  <img src={result.imageUrl || preview!} alt="Analyzed" className="rounded-xl border border-white/10 shadow-2xl shadow-cyan-500/30 max-h-64 object-cover" />
+          <div className="space-y-8">
+            {/* Primary Analysis Result Card */}
+            <div className="border border-border bg-surface rounded-sm p-6 sm:p-8">
+              <div className="flex items-center justify-between border-b border-border pb-4 mb-6">
+                <span className="section-label">Screening Telemetry & Findings</span>
+                <span className="font-mono text-xs text-muted">
+                  CONFIDENCE: <strong className="text-text">{result.confidence}%</strong>
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+                <div className="md:col-span-5">
+                  <div className="border border-border p-2 bg-bg rounded-sm">
+                    <img
+                      src={result.imageUrl || preview!}
+                      alt="Analyzed Lesion"
+                      className="w-full h-64 object-cover rounded-sm"
+                    />
+                  </div>
+                  <div className="mt-3 flex items-center justify-between font-mono text-[11px] text-muted">
+                    <span>SPECIMEN RESOLVED</span>
+                    <span>CODE: {result.code.toUpperCase()}</span>
+                  </div>
                 </div>
-                <div className="space-y-6">
+
+                <div className="md:col-span-7 space-y-6">
                   <div>
-                    <p className="text-sm text-slate-400 uppercase tracking-wider mb-1">Predicted Disease ({result.code.toUpperCase()})</p>
-                    <h3 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-red-400 to-orange-500">
+                    <span className="section-label">Differential Classification</span>
+                    <h2 className="text-2xl sm:text-3xl font-serif text-text mt-1">
                       {result.label}
-                    </h3>
+                    </h2>
                   </div>
-                  
+
+                  {/* Meter */}
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-slate-300">Confidence</span>
-                      <span className="text-cyan-400 font-bold">{result.confidence}%</span>
+                    <div className="flex justify-between font-mono text-xs">
+                      <span className="text-muted">Calculated Model Likelihood</span>
+                      <span className="font-semibold text-text">{result.confidence}%</span>
                     </div>
-                    <Progress value={result.confidence} className="h-2 bg-slate-800" />
+                    <div className="w-full h-2 bg-bg border border-border rounded-sm overflow-hidden">
+                      <div
+                        className="h-full bg-accent transition-all duration-500 ease-out"
+                        style={{ width: `${Math.min(result.confidence, 100)}%` }}
+                      />
+                    </div>
                   </div>
-                  {result.warnings.length>0 && (
-                      <div className="rounded-xl border border-yellow-500/30 bg-yellow-500/10 p-4">
-                          <h4 className="mb-2 text-sm font-semibold text-yellow-300">
-                              ⚠ Warnings
-                          </h4>
-                          <ul className="list-disc pl-5 space-y-1 text-sm text-yellow-200">
-                              {result.warnings.map((warning,index) => (
-                                  <li key={index}>{warning}</li>
-                              ))}
-                          </ul>
-                      </div>
+
+                  {/* Warnings */}
+                  {result.warnings.length > 0 && (
+                    <div className="border border-amber-500/40 bg-amber-500/10 p-4 rounded-sm text-xs space-y-2">
+                      <span className="font-mono font-semibold tracking-wider uppercase text-amber-800 dark:text-amber-300 block">
+                        Clinical Advisory
+                      </span>
+                      <ul className="list-disc pl-4 space-y-1 text-amber-900 dark:text-amber-200">
+                        {result.warnings.map((warning, index) => (
+                          <li key={index}>{warning}</li>
+                        ))}
+                      </ul>
+                    </div>
                   )}
 
+                  {/* Report Download */}
                   {(result.reportId || result.reportDownloadUrl) && (
-                    <div className="pt-2">
+                    <div className="pt-2 border-t border-border">
                       <DownloadReportButton
                         reportId={result.reportId}
                         reportDownloadUrl={result.reportDownloadUrl}
                       />
                     </div>
                   )}
-
-                  <div className="pt-4">
-                    <button 
-                      onClick={() => { setFile(null); setPreview(null); setResult(null); setError(null); }}
-                      className="text-cyan-400 hover:text-cyan-300 text-sm font-medium transition-colors"
-                    >
-                      ← Analyze another image
-                    </button>
-                  </div>
                 </div>
               </div>
-            </LevitatingCard>
+            </div>
 
-            {/* Educational Guide for the Predicted Class */}
+            {/* Educational Guide */}
             <SkinConditionGuide
               predictionLabel={result.label}
               predictionCode={result.code}
             />
           </div>
         )}
+
+        {/* Clinical Disclaimer Notice */}
+        <div className="mt-12 p-4 border border-border bg-surface rounded-sm text-xs text-muted flex items-start gap-3">
+          <CheckCircle2 className="w-4 h-4 text-accent mt-0.5 flex-shrink-0" />
+          <p>
+            <strong className="text-text font-medium">Notice:</strong> DERMO-AI provides machine-learning 
+            differential screening for educational and clinical research decision support. It does not replace 
+            histopathological biopsy or in-person evaluation by a board-certified dermatologist.
+          </p>
+        </div>
       </main>
 
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-2xl z-50">
-        <LevitatingCard className="p-3 text-center bg-black/60 border-yellow-500/30">
-          <p className="text-yellow-500/90 text-xs">
-            For informational and screening purposes only. Please consult a qualified dermatologist for official medical advice.
-          </p>
-        </LevitatingCard>
-      </div>
+      <Footer />
     </div>
   );
 }

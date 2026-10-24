@@ -61,47 +61,28 @@ export default function DownloadReportButton({
         type="button"
         onClick={handleDownload}
         disabled={isButtonDisabled}
-        className={
-          className ||
-          `
-          inline-flex items-center justify-center gap-2
-          rounded-xl border border-cyan-300/60
-          bg-gradient-to-r from-cyan-600 to-blue-600
-          px-6 py-3
-          text-sm font-semibold text-white
-          shadow-lg shadow-cyan-500/20
-          transition-all duration-300
-          hover:from-cyan-500 hover:to-blue-500
-          hover:border-cyan-200
-          hover:shadow-xl hover:shadow-cyan-400/30
-          hover:-translate-y-0.5
-          active:translate-y-0
-          disabled:cursor-not-allowed
-          disabled:opacity-50
-          disabled:hover:translate-y-0
-        `
-        }
+        className={className || 'btn-primary text-sm'}
       >
         {loading ? (
           <>
-            <Loader2 className="h-5 w-5 animate-spin" />
-            <span>Preparing PDF...</span>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>Preparing PDF…</span>
           </>
         ) : success ? (
           <>
-            <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-            <span>Report Downloaded!</span>
+            <CheckCircle2 className="h-4 w-4" />
+            <span>Downloaded</span>
           </>
         ) : (
           <>
-            <Download className="h-5 w-5" />
+            <Download className="h-4 w-4" />
             <span>Download PDF Report</span>
           </>
         )}
       </button>
 
       {error && (
-        <div className="flex items-center gap-2 text-xs text-red-400 mt-1 font-medium bg-red-500/10 border border-red-500/20 rounded-lg p-2.5">
+        <div className="alert alert-error text-xs">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <p role="alert">{error}</p>
         </div>
